@@ -10,7 +10,7 @@ class ReportsController extends Controller
     public function index()
     {
         // Fetch logs, newest first, with user data
-        $logs = ActivityLog::with('user')->latest()->paginate(15);
+        $logs = ActivityLog::with('user')->latest()->paginate(12);
         
         return view('reports.index', compact('logs'));
     }

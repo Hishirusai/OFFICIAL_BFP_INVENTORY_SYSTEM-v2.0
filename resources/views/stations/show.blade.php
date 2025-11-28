@@ -74,12 +74,14 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 Export
             </button>
-            <button onclick="openModal('globalTransferModal')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center transition-all">
+            <button onclick="openModal('globalTransferModal')" class="bg-gradient-to-r from-blue-700 to-blue-900 hover:from-blue-500 hover:to-blue-700 
+           text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                 Transfer
             </button>
 
-            <button onclick="openModal('addItemModal')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center transition-all">
+            <button onclick="openModal('addItemModal')" class="bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-500 hover:to-emerald-700 
+           text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Add Item
             </button>
@@ -138,7 +140,7 @@
             <table class="w-full text-left border-collapse">
                 
                 <thead>
-                    <tr class="bg-red-700 text-white text-xs uppercase tracking-widest font-extrabold shadow-md">
+                    <tr class="bg-gray-800 text-white text-xs uppercase tracking-widest font-extrabold shadow-md">
                         <th class="px-4 py-4 rounded-tl-3xl">
                             <div class="flex items-center gap-1">
                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
@@ -155,6 +157,14 @@
                             <div class="flex items-center gap-1">
                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                                 Type
+                            </div>
+                        </th>
+                        <th class="px-4 py-4">
+                            <div class="flex items-center gap-1">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Date Acquired
                             </div>
                         </th>
                         <th class="px-4 py-4">
@@ -181,6 +191,15 @@
                                 Condition
                             </div>
                         </th>
+                        <th class="px-4 py-4">
+                            <div class="flex items-center gap-1">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Date Expiry
+                            </div>
+                        </th>
+
                         <th class="px-4 py-4 text-center rounded-tr-3xl">
                             <div class="flex items-center justify-center gap-1">
                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -192,7 +211,20 @@
 
                 <tbody class="divide-y divide-gray-100 bg-white text-sm font-bold text-gray-700">
                     @forelse($items as $item)
-                    <tr class="hover:bg-gray-50 transition duration-150 group">
+                    <tr class="hover:bg-gray-50 transition duration-150 group cursor-pointer"
+                        onclick="openItemDetailsModal(
+                            '{{ $item->product_code }}', 
+                            '{{ $item->name }}', 
+                            '{{ $item->type }}', 
+                            '{{ $item->date_acquired }}', 
+                            '{{ $item->quantity }}', 
+                            '{{ $item->unit }}', 
+                            '{{ $item->unit_cost }}', 
+                            '{{ $item->total_cost }}',
+                            '{{ $item->condition }}', 
+                            '{{ $item->date_expiry }}',
+                            '{{ $item->description }}'
+                        )">
                         
                         <td class="px-4 py-3 font-mono">
                             {{ $item->product_code }}
@@ -209,6 +241,10 @@
                         </td>
 
                         <td class="px-4 py-3">
+                            {{ \Carbon\Carbon::parse($item->date_acquired)->format('M d, Y') }}
+                        </td>
+
+                        <td class="px-4 py-3">
                             {{ number_format($item->quantity) }} <span class="text-xs text-gray-600 uppercase ml-1 font-bold">{{ $item->unit }}</span>
                         </td>
 
@@ -216,24 +252,28 @@
                             ₱{{ number_format($item->unit_cost, 2) }}
                         </td>
 
-                        <td class="px-4 py-3 font-extrabold text-emerald-600">
+                        <td class="px-4 py-3 font-extrabold text-emerald-800">
                             ₱{{ number_format($item->total_cost, 2) }}
                         </td>
 
                         <td class="px-4 py-3">
                             @if($item->condition === 'Serviceable')
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-sm">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-700 to-emerald-900 text-white shadow-sm">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span> Serviceable
                                 </span>
                             @elseif($item->condition === 'Unserviceable')
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-700 to-orange-900 text-white shadow-sm">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span> Unserviceable
                                 </span>
                             @else
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-500 to-red-700 text-white shadow-sm">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-700 to-red-900 text-white shadow-sm">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white mr-1.5"></span> B.E.R.
                                 </span>
                             @endif
+                        </td>
+
+                        <td class="px-4 py-3">
+                            {{ $item->date_expiry ? \Carbon\Carbon::parse($item->date_expiry)->format('M d, Y') : '-' }}
                         </td>
 
                         <td class="px-4 py-3 text-center">
@@ -242,7 +282,7 @@
                                 <button onclick="openSingleTransferModal(
                                     '{{ $item->id }}', '{{ $item->name }}', '{{ $item->product_code }}', 
                                     '{{ $item->quantity }}', '{{ $item->unit }}'
-                                )" class="px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500 to-blue-700 text-white text-[10px] font-bold shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-800 transition-all flex items-center justify-center gap-1">
+                                )" class="px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-700 to-blue-900 text-white text-[10px] font-bold shadow-md hover:shadow-lg hover:from-blue-400 hover:to-blue-700 transition-all flex items-center justify-center gap-1">
                                     <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                                     TRANSFER
                                 </button>
@@ -251,7 +291,7 @@
                                     '{{ $item->id }}', '{{ $item->product_code }}', '{{ $item->name }}', '{{ $item->type }}', 
                                     '{{ $item->quantity }}', '{{ $item->unit_cost }}', '{{ $item->date_acquired }}', 
                                     '{{ $item->date_expiry }}', '{{ $item->description }}', '{{ $item->condition }}', '{{ $item->unit }}'
-                                )" class="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold shadow-md hover:shadow-lg hover:from-amber-500 hover:to-orange-600 transition-all flex items-center justify-center gap-1">
+                                )" class="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-700 to-orange-900 text-white text-[10px] font-bold shadow-md hover:shadow-lg hover:from-amber-500 hover:to-orange-700 transition-all flex items-center justify-center gap-1">
                                     <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     EDIT
                                 </button>
@@ -259,7 +299,7 @@
                                 <form action="{{ route('items.destroy', ['station' => $station->id, 'item' => $item->id]) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="px-3 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-red-700 text-white text-[10px] font-bold shadow-md hover:shadow-lg hover:from-red-600 hover:to-red-800 transition-all flex items-center justify-center gap-1">
+                                    <button type="submit" class="px-3 py-1.5 rounded-full bg-gradient-to-r from-red-700 to-red-900 text-white text-[10px] font-bold shadow-md hover:shadow-lg hover:from-red-400 hover:to-red-700 transition-all flex items-center justify-center gap-1">
                                         <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         DISPOSE
                                     </button>
@@ -774,13 +814,24 @@
             openModal('editItemModal');
         }
 
+        function formatCurrency(number) {
+            const num = parseFloat(number);
+            return isNaN(num) ? number : num.toLocaleString('en-PH', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
+        }
+        function formatNumber(number) {
+            const num = parseFloat(number);
+            return isNaN(num) ? number : num.toLocaleString('en-PH');
+        }
         // --- ITEM DETAILS MODAL (Read Only) ---
         function openItemDetailsModal(code, name, type, description, qty, unit, unitCost, totalCost, condition, acquired, expiry) {
             document.getElementById('detail_product_code').innerText = code;
             document.getElementById('detail_name').innerHTML = `${name} <span class="text-sm font-medium text-gray-500">(${type})</span>`;
-            document.getElementById('detail_quantity').innerText = `${qty} ${unit}`;
-            document.getElementById('detail_unit_cost').innerText = `₱${unitCost}`;
-            document.getElementById('detail_total_cost').innerText = `₱${totalCost}`;
+            document.getElementById('detail_quantity').innerText = `${formatNumber(qty)} ${unit}`;
+            document.getElementById('detail_unit_cost').innerText = `₱${formatCurrency(unitCost)}`;
+            document.getElementById('detail_total_cost').innerText = `₱${formatCurrency(totalCost)}`;
             
             // Format Date
             const dateAcquired = new Date(acquired);
@@ -802,30 +853,28 @@
         // --- EDIT MODAL TRIGGER ---
         // ✅ FIXED: Added 'unit' parameter at the end
         function openEditItemModal(itemId, productCode, name, type, quantity, unitCost, dateAcquired, dateExpiry, description, condition, unit) {
-            
             document.getElementById('edit_product_code').value = productCode;
+            document.getElementById('edit_product_code_display').innerText = productCode;
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_type').value = type;
             document.getElementById('edit_qty').value = quantity;
-            document.getElementById('edit_unit_cost').value = unitCost.replace(/[^0-9.]/g, '');
-            
+            document.getElementById('edit_unit_cost').value = unitCost;
+
             // Date Helper
-            function formatDate(dateString) {
-                if (!dateString || dateString === 'null' || dateString === 'N/A') return '';
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) return ''; 
-                return date.toISOString().split('T')[0]; 
-            }
+            const formatDate = (dateStr) => {
+                if(!dateStr || dateStr === 'null') return '';
+                return new Date(dateStr).toISOString().split('T')[0];
+            };
 
             document.getElementById('edit_date_acquired').value = formatDate(dateAcquired);
             document.getElementById('edit_date_expiry').value = formatDate(dateExpiry);
             document.getElementById('edit_description').value = description;
-            
-            // ✅ FIXED: Correctly assigning unit and condition
-            document.getElementById('edit_unit').value = unit; 
-            document.getElementById('edit_condition').value = condition; 
+            document.getElementById('edit_unit').value = unit;
+            document.getElementById('edit_condition').value = condition;
 
+            // Calculate total immediately when modal opens
             calculateEditTotal();
+
             document.getElementById('editItemForm').action = `/stations/{{ $station->id }}/items/${itemId}`;
             openModal('editItemModal');
         }

@@ -6,15 +6,12 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StationController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\TransferController;
-use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\ReportsController; 
 use App\Http\Controllers\UserController;
 
 // 1. Guest Routes (Only for people NOT logged in)
 Route::middleware('guest')->group(function () {
-    Route::get('/', function () {
-        return redirect('/login'); // Redirect home to login
-    });
-    
+    Route::get('/', function () { return redirect('/login'); });
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
 });
