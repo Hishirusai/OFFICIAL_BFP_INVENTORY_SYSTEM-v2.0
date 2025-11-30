@@ -77,8 +77,10 @@ class StationController extends Controller
     // SHOW FUNCTION
     public function show(Request $request, Station $station)
     {
-        $query = $station->items()->latest();
+    // ✅ Sorts alphabetically (A-Z) by name
+        $query = $station->items()->orderBy('name', 'asc')->latest();
 
+        // 2. Search Filters (Keep existing logic)
         if ($request->filled('strict_code_search')) {
              $query->where('product_code', '=', $request->strict_code_search);
         } 
@@ -91,6 +93,7 @@ class StationController extends Controller
             });
         }
 
+        // 3. Other Filters (Keep existing logic)
         if ($request->filled('condition')) {
             if ($request->condition == 'BER') {
                 $query->where(function($q) { $q->where('condition', '=', 'B.E.R.')->orWhere('condition', '=', 'BER'); });
@@ -102,11 +105,22 @@ class StationController extends Controller
             $query->where('unit', 'LIKE', "%{$request->unit}%");
         }
 
+        // 4. PAGINATION (This is for the Table - Keep as is)
         $items = $query->paginate(11)->appends($request->all());
+
+        // ✅ 5. NEW: Fetch ALL items for the Bulk Transfer Dropdown
+        // We select specific columns to keep the page load fast.
+        $allStationItems = $station->items()
+            ->select('id', 'name', 'product_code', 'type', 'quantity', 'unit')
+            ->where('quantity', '>', 0) // Optional: Only show items that actually have stock
+            ->orderBy('name')
+            ->get();
+
         $itemNames = Item::distinct()->pluck('name');
         $itemTypes = Item::distinct()->pluck('type');
 
-        return view('stations.show', compact('station', 'items', 'itemNames', 'itemTypes'));
+        // ✅ 6. Add 'allStationItems' to the compact() list
+        return view('stations.show', compact('station', 'items', 'itemNames', 'itemTypes', 'allStationItems'));
     }
 
     public function store(Request $request)

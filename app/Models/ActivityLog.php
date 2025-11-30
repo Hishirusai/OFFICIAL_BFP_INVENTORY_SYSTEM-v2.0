@@ -9,7 +9,13 @@ class ActivityLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'action_type', 'details'];
+    // ✅ 1. Add 'metadata' to fillable
+    protected $fillable = ['user_id', 'action_type', 'details', 'metadata'];
+
+    // ✅ 2. Cast metadata as an array so we can access it easily
+    protected $casts = [
+        'metadata' => 'array',
+    ];
 
     public function user()
     {

@@ -1062,7 +1062,7 @@
         }
 
         // --- DETAILS MODAL ---
-        function openItemDetailsModal(code, name, type, description, qty, unit, unitCost, totalCost, condition, acquired, expiry) {
+        function openItemDetailsModal(code, name, type, acquired, qty, unit, unitCost, totalCost, condition, expiry, description) {
             document.getElementById('detail_product_code').innerText = code;
             document.getElementById('detail_name').innerHTML = `${name} <span class="text-sm font-medium text-gray-500">(${type})</span>`;
             document.getElementById('detail_quantity').innerText = `${formatNumber(qty)} ${unit}`;
@@ -1081,7 +1081,9 @@
                                 condition === 'Unserviceable' ? 'bg-orange-100 text-orange-700' : 
                                 'bg-red-100 text-red-700';
             document.getElementById('detail_condition').innerHTML = `<span class="${conditionClass} px-3 py-1 rounded-full text-xs font-bold uppercase">${condition}</span>`;
+            openModal('itemDetailsModal');
         }
+
 
         // --- DISPOSE MODAL ---
         function openDisposeModal(itemId) {
@@ -1124,7 +1126,7 @@
         }
 
         // --- BULK TRANSFER LOGIC ---
-        const availableItems = @json($items->items()); // Note: Use ->items() if paginated, or just $items if all
+        const availableItems = @json($allStationItems); // Note: Use ->items() if paginated, or just $items if all
 
         function addTransferRow() {
             const container = document.getElementById('transferItemsContainer');
@@ -1330,6 +1332,14 @@
         toggleNotificationDropdown(); 
         openModal('receiptModal');
     }
+
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('notificationDropdown');
+        const btn = dropdown.previousElementSibling; 
+        if (!dropdown.classList.contains('hidden') && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
         
     </script>
 @endsection

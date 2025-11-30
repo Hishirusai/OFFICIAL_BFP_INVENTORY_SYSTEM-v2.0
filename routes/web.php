@@ -58,4 +58,5 @@ Route::middleware('auth')->group(function () {
     Route::post('/stations/notifications/{id}/read', [App\Http\Controllers\StationController::class, 'markNotification']);
     Route::delete('/stations/{station}/notifications/clear', [App\Http\Controllers\StationController::class, 'clearNotifications'])->name('stations.notifications.clear');
     
+    Route::get('/stations/{station}/export', [App\Http\Controllers\StationController::class, 'export'])->name('stations.export');
 });

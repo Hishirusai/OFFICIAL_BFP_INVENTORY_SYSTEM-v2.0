@@ -40,7 +40,21 @@ class ItemController extends Controller
         ActivityLog::create([
             'user_id'     => Auth::id(),
             'action_type' => 'Item Created',
-            'details'     => "Created item '{$item->name}' ({$item->quantity} {$item->unit}) in {$station->name}."
+            'details'     => "Created item '{$item->name}' ({$item->quantity} {$item->unit}) in {$station->name}.",
+            // ✅ SAVE ALL DETAILS
+            'metadata'    => [
+                'product_code' => $item->product_code,
+                'name'         => $item->name,
+                'type'         => $item->type,
+                'quantity'     => $item->quantity,
+                'unit'         => $item->unit,
+                'unit_cost'    => $item->unit_cost,
+                'total_cost'   => $item->total_cost,
+                'condition'    => $item->condition,
+                'date_acquired'=> $item->date_acquired,
+                'date_expiry'  => $item->date_expiry,
+                'description'  => $item->description,
+            ]
         ]);
 
         return redirect()->route('stations.show', $station->id)->with('success', 'Item added successfully!');
@@ -97,7 +111,18 @@ class ItemController extends Controller
         ActivityLog::create([
             'user_id'     => Auth::id(),
             'action_type' => $action,
-            'details'     => $details
+            'details'     => $details,
+            // ✅ SAVE UPDATED DETAILS
+            'metadata'    => [
+                'product_code' => $targetItem->product_code,
+                'name'         => $targetItem->name,
+                'quantity'     => $newQty, // Use new quantity
+                'unit'         => $targetItem->unit,
+                'unit_cost'    => $validated['unit_cost'],
+                'total_cost'   => $totalCost,
+                'condition'    => $condition,
+                'date_expiry'  => $validated['date_expiry'] ?? null,
+            ]
         ]);
 
         return redirect()->route('stations.show', $station->id)->with('success', 'Item updated successfully!');
