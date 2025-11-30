@@ -53,19 +53,63 @@
     <div class="flex flex-col md:flex-row justify-between items-center mb-2 gap-4">
         <div>
             <div class="flex items-center gap-3">
-                
                 <a href="{{ route('stations.index') }}" 
                    class="bg-white text-gray-700 hover:text-gray-900 border border-gray-300 font-bold py-2 px-4 rounded-xl shadow-sm flex items-center transition-all transform hover:scale-105">
                     <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     BACK
                 </a>
-                
                 <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">{{ $station->name }}</h1>
             </div>
             <p class="text-gray-600 mt-1 ml-30 text-lg">{{ $station->location ?? 'No Location' }}</p>
         </div>
 
-        <div class="flex gap-3">
+        <div class="flex items-center gap-3"> 
+            
+            <div class="relative z-50">
+                <button onclick="toggleNotificationDropdown()" class="bg-white text-gray-600 hover:text-blue-600 border border-gray-300 font-bold p-2.5 rounded-xl shadow-sm transition-all relative">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span id="notif-badge" class="{{ $station->unreadNotifications->count() > 0 ? '' : 'hidden' }} absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-md animate-pulse">
+                        {{ $station->unreadNotifications->count() }}
+                    </span>
+                </button>
+
+                <div id="notificationDropdown" class="hidden absolute right-0 mt-3 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-visible">
+                    <div class="absolute -top-2 right-4 w-4 h-4 bg-white border-t border-l border-gray-200 transform rotate-45 z-10"></div>
+                    <div class="bg-gray-50 px-5 py-4 border-b border-gray-200 flex justify-between items-center rounded-t-2xl relative z-20">
+                        <h3 class="font-bold text-gray-700 text-base">Notifications</h3>
+                        @if($station->notifications->count() > 0)
+                            <form action="{{ route('stations.notifications.clear', $station->id) }}" method="POST">
+                                @csrf @method('DELETE')
+                                <button class="text-xs text-red-500 hover:text-red-700 hover:underline font-bold uppercase tracking-wide">Clear All</button>
+                            </form>
+                        @endif
+                    </div>
+                    <div class="max-h-[400px] overflow-y-auto relative z-20">
+                        @forelse($station->notifications as $notification)
+                            <div id="notif-item-{{ $notification->id }}" 
+                                class="group p-5 border-b border-gray-100 cursor-pointer transition duration-200 
+                                {{ $notification->read_at ? 'bg-white opacity-60 hover:opacity-100' : 'bg-blue-50/50 border-l-4 border-blue-500' }} hover:bg-gray-50"
+                                onclick="openReceiptModal('{{ $notification->id }}', {{ json_encode($notification->data) }})">
+                                <div class="flex justify-between items-start mb-1">
+                                    <p class="font-extrabold text-gray-800 text-sm group-hover:text-blue-600 transition">{{ $notification->data['title'] }}</p>
+                                    <span class="text-[10px] text-gray-400 font-mono whitespace-nowrap ml-2">{{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}</span>
+                                </div>
+                                <p class="text-sm text-gray-600 leading-snug">{{ $notification->data['message'] }}</p>
+                                <div class="mt-2 flex items-center text-[11px] text-gray-400 uppercase font-bold tracking-wider">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    {{ $notification->data['user_name'] ?? 'System' }}
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-8 text-center flex flex-col items-center text-gray-400">
+                                <svg class="w-12 h-12 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                <span class="text-sm font-medium">No notifications yet.</span>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
             <button class="bg-white text-gray-600 hover:text-gray-900 border border-gray-300 font-bold py-2 px-4 rounded-xl shadow-sm flex items-center transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                 Print
@@ -74,18 +118,15 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 Export
             </button>
-            <button onclick="openModal('globalTransferModal')" class="bg-gradient-to-r from-blue-700 to-blue-900 hover:from-blue-500 hover:to-blue-700 
-           text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center transition-all">
+            <button onclick="openModal('globalTransferModal')" class="bg-gradient-to-r from-blue-700 to-blue-900 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                 Transfer
             </button>
-
-            <button onclick="openModal('addItemModal')" class="bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-500 hover:to-emerald-700 
-           text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center transition-all">
+            <button onclick="openModal('addItemModal')" class="bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-500 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Add Item
             </button>
-        </div>
+        </div> 
     </div>
 
     <form id="searchForm" method="GET" action="{{ route('stations.show', $station->id) }}" class="flex flex-col md:flex-row gap-4 mb-6 items-center">
@@ -764,6 +805,69 @@
         </div>
     </div>
 
+    <div id="receiptModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-[60] flex items-center justify-center">
+        <div class="relative p-0 border w-full max-w-3xl shadow-2xl rounded-3xl bg-white overflow-hidden transform transition-all">
+            
+            <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-8 text-white flex justify-between items-center shadow-lg">
+                <div>
+                    <h3 class="text-3xl font-extrabold tracking-tight">TRANSFER SUMMARY</h3> <p class="text-gray-300 text-base mt-1">Stock Movement Details</p>
+                </div>
+                <div class="text-right bg-white/10 p-3 rounded-lg border border-white/20 backdrop-blur-sm">
+                    <p class="text-[10px] text-gray-300 uppercase tracking-widest mb-1">Date Processed</p>
+                    <p class="font-mono text-xl font-bold" id="receipt_date">--</p>
+                </div>
+            </div>
+
+            <div class="p-8">
+                <div class="flex flex-col md:flex-row justify-between mb-8 bg-gray-50 p-6 rounded-2xl border border-gray-100 gap-6">
+                    <div class="flex-1">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">From (Source)</p>
+                        <p class="text-xl font-extrabold text-gray-800" id="receipt_from">--</p>
+                        <p class="text-sm text-gray-500 font-medium" id="receipt_location">--</p>
+                    </div>
+                    
+                    <div class="hidden md:flex items-center justify-center px-4">
+                        <svg class="w-8 h-8 text-gray-300 transform rotate-90 md:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </div>
+
+                    <div class="flex-1 md:text-right">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">To (Destination)</p>
+                        <p class="text-xl font-extrabold text-gray-800">{{ $station->name }}</p>
+                        <p class="text-sm text-gray-500 font-medium">{{ $station->location }}</p>
+                    </div>
+                </div>
+
+                <div class="border border-gray-200 rounded-xl overflow-hidden mb-8 shadow-sm">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-100 text-gray-600 font-bold uppercase text-xs tracking-wider">
+                            <tr>
+                                <th class="p-4 border-b border-gray-200">Item Name / Code</th>
+                                <th class="p-4 border-b border-gray-200 text-center">Qty</th>
+                                <th class="p-4 border-b border-gray-200 text-right">Unit Cost</th>
+                                <th class="p-4 border-b border-gray-200 text-right">Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receipt_items_body" class="divide-y divide-gray-100 bg-white">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div class="mb-8">
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Notes / Remarks</p>
+                    <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100 text-gray-700 text-sm italic leading-relaxed" id="receipt_notes">
+                        No notes provided.
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-6 border-t border-gray-100">
+                    <button type="button" onclick="closeModal('receiptModal')" class="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition shadow-lg text-sm">
+                        Close Summary
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- GLOBAL ON LOAD ---
         document.addEventListener('DOMContentLoaded', function() {
@@ -1134,6 +1238,98 @@
             if (form.checkValidity() && isValid) form.submit();
             else form.reportValidity();
         }
+        // Toggle Notification Dropdown
+    function toggleNotificationDropdown() {
+        const dropdown = document.getElementById('notificationDropdown');
+        dropdown.classList.toggle('hidden');
+    }
+
+    // Close dropdown when clicking outside
+    function openReceiptModal(notificationId, data) {
+        // 1. Mark as Read in Backend (Background Fetch)
+        fetch(`/stations/notifications/${notificationId}/read`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if(response.ok) {
+                // ✅ DYNAMIC UI UPDATE (Fixes Point 2)
+                
+                // A. Visually mark the specific list item as read immediately
+                const listItem = document.getElementById(`notif-item-${notificationId}`);
+                if(listItem) {
+                    listItem.classList.remove('bg-blue-50/50', 'border-l-4', 'border-blue-500');
+                    listItem.classList.add('bg-white', 'opacity-60');
+                }
+
+                // B. Decrement the Badge Count (Don't hide it unless it hits 0)
+                const badge = document.getElementById('notif-badge');
+                if(badge) {
+                    let currentCount = parseInt(badge.innerText);
+                    if(currentCount > 0) {
+                        currentCount--;
+                        badge.innerText = currentCount;
+                        // Hide if 0
+                        if(currentCount === 0) {
+                            badge.classList.add('hidden');
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Populate Modal Data
+        document.getElementById('receipt_date').innerText = data.transfer_date;
+        document.getElementById('receipt_from').innerText = data.from_station_name;
+        document.getElementById('receipt_location').innerText = data.from_station_location;
+        
+        const notesDiv = document.getElementById('receipt_notes');
+        notesDiv.innerText = data.notes || "No notes provided.";
+        // Style notes if empty
+        if(!data.notes) notesDiv.classList.add('text-gray-400');
+        else notesDiv.classList.remove('text-gray-400');
+
+        // 3. Populate Items Table
+        const tbody = document.getElementById('receipt_items_body');
+        tbody.innerHTML = ''; 
+        
+        data.items.forEach(item => {
+            // Helper for Number Formatting (Commas + Decimals)
+            const formatNum = (num) => Number(num).toLocaleString('en-US');
+            const formatMoney = (num) => '₱' + Number(num).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            // Handle cases where old notifications might not have cost data yet
+            const unitCost = item.unit_cost ? formatMoney(item.unit_cost) : '-';
+            const totalCost = item.total_cost ? formatMoney(item.total_cost) : '-';
+
+            const row = `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="p-4">
+                        <span class="block font-bold text-gray-800 text-base">${item.name}</span>
+                        <span class="block font-mono text-xs text-gray-400 mt-1">${item.product_code}</span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-lg font-bold text-sm">
+                            ${formatNum(item.quantity)} <span class="text-[10px] uppercase text-blue-600">${item.unit}</span>
+                        </span>
+                    </td>
+                    <td class="p-4 text-right font-medium text-gray-600">
+                        ${unitCost}
+                    </td>
+                    <td class="p-4 text-right font-extrabold text-emerald-700">
+                        ${totalCost}
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+
+        // 4. Close Dropdown & Open Modal
+        toggleNotificationDropdown(); 
+        openModal('receiptModal');
+    }
         
     </script>
 @endsection

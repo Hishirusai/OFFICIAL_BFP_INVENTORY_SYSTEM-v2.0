@@ -8,6 +8,7 @@ use App\Models\Station;
 use App\Models\ActivityLog; // ✅ Import
 use Illuminate\Support\Facades\Auth; // ✅ Import
 use Illuminate\Support\Facades\DB;
+use App\Notifications\TransferredNotification;
 
 class TransferController extends Controller
 {
@@ -38,8 +39,11 @@ class TransferController extends Controller
         }
 
         $toStation = Station::find($request->to_station_id);
-        $isBulk = count($request->transfers) > 1; // Check if bulk
+        $isBulk = count($request->transfers) > 1; 
         $actionType = $isBulk ? 'Bulk Transfer' : 'Single Transfer';
+
+        // <--- CHANGE 1: Initialize the summary array here
+        $transferredItemsSummary = []; 
 
         DB::beginTransaction();
         try {
@@ -72,13 +76,33 @@ class TransferController extends Controller
                     $newItem->save();
                 }
 
-                // 📝 LOG: Log EACH item movement
+                // <--- CHANGE 2: Save item details to the array for the receipt
+                $transferredItemsSummary[] = [
+                    'product_code' => $itemToTransfer->product_code,
+                    'name'         => $itemToTransfer->name,
+                    'quantity'     => $transferData['quantity'],
+                    'unit'         => $itemToTransfer->unit,
+                    
+                    // ✅ ADDED THIS: Save the cost so we can show it in the modal later
+                    'unit_cost'    => $itemToTransfer->unit_cost, 
+                    'total_cost'   => $transferData['quantity'] * $itemToTransfer->unit_cost, 
+                ];
+
+                // Log Activity
                 ActivityLog::create([
                     'user_id'     => Auth::id(),
                     'action_type' => $actionType,
                     'details'     => "Transferred {$transferData['quantity']} {$itemToTransfer->unit} of '{$itemToTransfer->name}' to {$toStation->name}."
                 ]);
             }
+
+            // <--- CHANGE 3: Actually SEND the notification
+            $toStation->notify(new TransferredNotification(
+                $station,                 // From Station
+                $transferredItemsSummary, // The list of items we collected
+                Auth::user(),             // Who did it
+                $request->notes           // Notes
+            ));
 
             DB::commit();
             return redirect()->route('stations.show', $station->id)->with('success', 'Transfer completed successfully!');

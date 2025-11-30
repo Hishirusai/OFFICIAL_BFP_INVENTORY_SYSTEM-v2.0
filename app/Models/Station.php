@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany; // ✅ Added this import
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable; // ✅ 1. Import this
 
 class Station extends Model
 {
-    use HasFactory, SoftDeletes;
+    // ✅ 2. Add Notifiable to the use statement
+    use HasFactory, SoftDeletes, Notifiable; 
 
     protected $fillable = [
         'name',
@@ -19,7 +21,7 @@ class Station extends Model
     /**
      * Get the items for the station.
      */
-    public function items(): HasMany // ✅ THIS IS THE MISSING FUNCTION
+    public function items(): HasMany
     {
         return $this->hasMany(Item::class);
     }

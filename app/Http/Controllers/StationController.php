@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Station;
 use App\Models\Item;
-use App\Models\ActivityLog; // ✅ Add this line
+use App\Models\ActivityLog; 
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -25,7 +25,7 @@ class StationController extends Controller
         return response()->json($items);
     }
 
-    // INDEX FUNCTION (Updated)
+    // INDEX FUNCTION
     public function index(Request $request)
     {
         $stationsQuery = Station::query();
@@ -33,13 +33,11 @@ class StationController extends Controller
         $isSearchingItems = false;
         $searchDisplay = '';
 
-        // CHECK 1: Is there a hidden strict code? (User clicked dropdown)
         if ($request->filled('strict_code_search')) {
             $code = $request->strict_code_search;
             $isSearchingItems = true;
-            $searchDisplay = $request->item_search; // What the user typed/saw
+            $searchDisplay = $request->item_search; 
 
-            // Exact match on Product Code only
             $searchLogic = function ($query) use ($code) {
                 $query->where('product_code', '=', $code); 
             };
@@ -47,7 +45,6 @@ class StationController extends Controller
             $stationsQuery->whereHas('items', $searchLogic);
             $stationsQuery->withSum(['items as matched_quantity' => $searchLogic], 'quantity');
 
-        // CHECK 2: Standard text search (User typed and pressed Enter without clicking suggestion)
         } elseif ($request->filled('item_search')) {
             $search = $request->item_search;
             $isSearchingItems = true;
@@ -65,7 +62,6 @@ class StationController extends Controller
             $stationsQuery->withSum(['items as matched_quantity' => $searchLogic], 'quantity');
             
         } else {
-            // No search
             $stationsQuery->withSum('items as matched_quantity', 'quantity');
         }
 
@@ -78,16 +74,14 @@ class StationController extends Controller
         return view('stations.index', compact('stations', 'totalMatchedQuantity', 'isSearchingItems', 'searchDisplay'));
     }
 
-    // SHOW FUNCTION (Updated to handle strict code)
+    // SHOW FUNCTION
     public function show(Request $request, Station $station)
     {
         $query = $station->items()->latest();
 
-        // Check Strict Code first
         if ($request->filled('strict_code_search')) {
              $query->where('product_code', '=', $request->strict_code_search);
         } 
-        // Fallback to standard search
         elseif ($request->filled('search') || $request->filled('item_search')) {
             $searchTerm = $request->get('search', $request->get('item_search'));
             $query->where(function($q) use ($searchTerm) {
@@ -97,7 +91,6 @@ class StationController extends Controller
             });
         }
 
-        // Filters
         if ($request->filled('condition')) {
             if ($request->condition == 'BER') {
                 $query->where(function($q) { $q->where('condition', '=', 'B.E.R.')->orWhere('condition', '=', 'BER'); });
@@ -129,7 +122,6 @@ class StationController extends Controller
 
         $station = Station::create($validated);
 
-        // 📝 LOG: Station Creation
         ActivityLog::create([
             'user_id'     => Auth::id(),
             'action_type' => 'Station Created',
@@ -158,4 +150,24 @@ class StationController extends Controller
         $station->delete();
         return redirect()->route('stations.index')->with('success', 'Station deleted successfully!');
     }
+
+    // ✅ FIXED: These functions are now INSIDE the class
+    public function markNotification(Request $request, $id)
+    {
+        $notification = \Illuminate\Notifications\DatabaseNotification::find($id);
+        
+        if($notification) {
+            $notification->markAsRead();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    // CLEAR ALL NOTIFICATIONS FOR A STATION
+    public function clearNotifications(Station $station)
+    {
+        $station->notifications()->delete();
+        return back()->with('success', 'Notifications cleared.');
+    }
+
 }
