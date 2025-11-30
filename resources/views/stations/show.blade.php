@@ -1062,25 +1062,27 @@
         }
 
         // --- DETAILS MODAL ---
-        function openItemDetailsModal(code, name, type, description, qty, unit, unitCost, totalCost, condition, acquired, expiry) {
+        // Note: parameter order must match the values passed in the row's onclick
+        function openItemDetailsModal(code, name, type, acquired, qty, unit, unitCost, totalCost, condition, expiry, description) {
             document.getElementById('detail_product_code').innerText = code;
             document.getElementById('detail_name').innerHTML = `${name} <span class="text-sm font-medium text-gray-500">(${type})</span>`;
             document.getElementById('detail_quantity').innerText = `${formatNumber(qty)} ${unit}`;
             document.getElementById('detail_unit_cost').innerText = `₱${formatCurrency(unitCost)}`;
             document.getElementById('detail_total_cost').innerText = `₱${formatCurrency(totalCost)}`;
-            
+
             const dateAcquired = new Date(acquired);
             document.getElementById('detail_acquired').innerText = !isNaN(dateAcquired) ? dateAcquired.toLocaleDateString('en-US') : acquired;
-            
+
             const dateExpiry = new Date(expiry);
             document.getElementById('detail_expiry').innerText = (expiry === 'null' || expiry === 'N/A') ? 'N/A' : (!isNaN(dateExpiry) ? dateExpiry.toLocaleDateString('en-US') : expiry);
-            
+
             document.getElementById('detail_description').innerText = description;
-            
+
             let conditionClass = condition === 'Serviceable' ? 'bg-green-100 text-green-700' : 
                                 condition === 'Unserviceable' ? 'bg-orange-100 text-orange-700' : 
                                 'bg-red-100 text-red-700';
             document.getElementById('detail_condition').innerHTML = `<span class="${conditionClass} px-3 py-1 rounded-full text-xs font-bold uppercase">${condition}</span>`;
+            openModal('itemDetailsModal');
         }
 
         // --- DISPOSE MODAL ---
