@@ -66,19 +66,19 @@
     </div>
 
     @if(isset($isSearchingItems) && $isSearchingItems)
-    <div class="mb-8 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl shadow-lg p-6 text-white flex flex-col md:flex-row items-center justify-between border border-blue-900">
+    <div class="mb-8 bg-gradient-to-r from-gray-600 to-gray-800 rounded-2xl shadow-lg p-6 text-white flex flex-col md:flex-row items-center justify-between border border-blue-900">
         <div class="flex items-center mb-4 md:mb-0">
             <div class="p-3 bg-white/20 rounded-full backdrop-blur-sm mr-4">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
             <div>
                 <h2 class="text-2xl font-bold">Search Results</h2>
-                <p class="text-blue-100">Displaying total quantities for: <span class="font-extrabold text-white">"{{ $searchDisplay ?? request('item_search') }}"</span></p>
+                <p class="text-white">Displaying total quantities for: <span class="font-extrabold text-white">"{{ $searchDisplay ?? request('item_search') }}"</span></p>
             </div>
         </div>
         <div class="flex items-center gap-4">
             <div class="text-center md:text-right bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10 min-w-[160px]">
-                <span class="block text-sm text-blue-200 uppercase font-bold tracking-wider">Total Quantity</span>
+                <span class="block text-sm text-white uppercase font-bold tracking-wider">Total Quantity</span>
                 <span class="block text-4xl font-extrabold text-white">
                     {{ number_format($totalMatchedQuantity ?? 0) }}
                 </span>
@@ -132,7 +132,7 @@
                     </div>
 
                     @if(isset($isSearchingItems) && $isSearchingItems)
-                    <div class="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-center justify-between">
+                    <div class="mt-4 bg-blue-300 border border-blue-100 rounded-lg p-3 flex items-center justify-between">
                         <span class="text-sm font-bold text-blue-600 uppercase tracking-wide">Quantity Found</span>
                         <span class="text-xl font-extrabold text-blue-700 bg-white px-3 py-1 rounded shadow-sm border border-blue-100">
                             {{ number_format($station->matched_quantity ?? 0) }}

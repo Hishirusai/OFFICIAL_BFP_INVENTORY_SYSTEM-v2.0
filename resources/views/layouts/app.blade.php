@@ -6,51 +6,7 @@
     <title>BFP Inventory System</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
-    <style>
-        /* --- DARK THEME OVERRIDES --- */
-        
-        /* 1. Darken the Main Background */
-        body.dark-theme main {
-            background-color: #0f172a !important; /* slate-900 */
-        }
-
-        /* 2. Lighten Text that sits directly on the background (Titles, descriptions) */
-        body.dark-theme main > div > div > h1,
-        body.dark-theme main > div > div > h2,
-        body.dark-theme main .text-gray-900 {
-            color: #f8fafc !important; /* slate-50 */
-        }
-        
-        body.dark-theme main .text-gray-600,
-        body.dark-theme main .text-gray-500 {
-            color: #94a3b8 !important; /* slate-400 */
-        }
-
-        /* 3. PROTECT CONTENT: Keep .bg-white elements (Cards, Tables) Light */
-        body.dark-theme .bg-white {
-            background-color: #ffffff !important;
-            color: #1f2937 !important; /* gray-800 */
-            border-color: #e5e7eb !important;
-        }
-
-        /* Ensure text inside white cards stays dark */
-        body.dark-theme .bg-white h1,
-        body.dark-theme .bg-white h2,
-        body.dark-theme .bg-white p,
-        body.dark-theme .bg-white span,
-        body.dark-theme .bg-white td,
-        body.dark-theme .bg-white th,
-        body.dark-theme .bg-white .text-gray-600 {
-            color: #374151 !important; /* gray-700 */
-        }
-
-        /* Protect Buttons so they don't lose their text color */
-        body.dark-theme button, 
-        body.dark-theme .btn,
-        body.dark-theme a[class*="bg-"] {
-            color: inherit; 
-        }
-    </style>
+    {{-- REMOVED: Dark Theme <style> block --}}
 </head>
 <body id="app-body" class="bg-gray-100 font-sans antialiased">
 
@@ -81,17 +37,58 @@
                     <span class="ml-2 font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Dashboard</span>
                 </a>
 
+                {{-- ================= STATIONS & UNITS START ================= --}}
                 @php
                     $isStationsActive = request()->routeIs('stations.*');
+                    $isStationShow = request()->routeIs('stations.show');
                 @endphp
+
+                {{-- 1. Main Parent Link --}}
                 <a href="{{ route('stations.index') }}" 
-                   class="relative flex items-center px-4 py-3 transition-all duration-200
-                   {{ $isStationsActive ? 'bg-red-700 text-white border-l-4 border-yellow-300 shadow-lg' : 'hover:bg-red-800 text-red-100 hover:text-white' }}">
+                class="relative flex items-center px-4 py-3 transition-all duration-200
+                {{ $isStationsActive ? 'bg-red-700 text-white border-l-4 border-yellow-300 shadow-lg' : 'hover:bg-red-800 text-red-100 hover:text-white' }}">
                     <div class="min-w-[3rem] flex justify-center">
                         <svg class="w-6 h-6 {{ $isStationsActive ? 'text-yellow-300' : 'text-red-300 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                     </div>
                     <span class="ml-2 font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Stations & Units</span>
                 </a>
+
+                {{-- 2. Sub-Navigation: Active Station Badge --}}
+                @if($isStationShow && isset($station))
+                    @php
+                        // LOGIC: Replicate the index.blade.php logic
+                        $isMain = $station->id == 1;
+                        
+                        // Calculate "S1", "S2" based on how many stations are before this one
+                        $stationIndex = \App\Models\Station::where('id', '<', $station->id)->count(); 
+                        
+                        // Define Styles exactly like index.blade.php
+                        $badgeBg = $isMain 
+                            ? 'bg-gradient-to-br from-red-500 to-red-700 text-white' 
+                            : 'bg-gradient-to-br from-orange-400 to-orange-600 text-white';
+                            
+                        $badgeText = $isMain ? 'MS' : 'S' . $stationIndex;
+                    @endphp
+
+                    <div class="relative flex items-center px-4 py-2 bg-red-950/40 border-l-4 border-red-900 transition-all duration-300 group/sub">
+                        
+                        {{-- BADGE CONTAINER --}}
+                        <div class="min-w-[3rem] flex justify-center">
+                            {{-- The "Code" Badge --}}
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-extrabold shadow-md {{ $badgeBg }}">
+                                {{ $badgeText }}
+                            </div>
+                        </div>
+
+                        {{-- STATION NAME --}}
+                        <div class="ml-2 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span class="block text-sm font-medium text-white truncate w-32" title="{{ $station->name }}">
+                                {{ $station->name }}
+                            </span>
+                        </div>
+                    </div>
+                @endif
+                {{-- ================= STATIONS & UNITS END ================= --}}
 
                 <a href="{{ route('reports.index') }}" 
                    class="relative flex items-center px-4 py-3 transition-all duration-200
@@ -114,12 +111,7 @@
 
             <div class="border-t border-red-800 p-4 bg-red-950 overflow-hidden">
                 
-                <button onclick="toggleTheme()" class="w-full flex items-center justify-center px-2 py-2 mb-3 bg-red-900/50 hover:bg-red-800 text-yellow-300 font-bold rounded transition-colors shadow-sm border border-red-800/50 group/theme">
-                    <svg id="icon-sun" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <svg id="icon-moon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                    
-                    <span id="theme-text" class="ml-2 text-xs opacity-0 w-0 group-hover:w-auto group-hover:opacity-100 transition-all duration-300 whitespace-nowrap">Dark BG</span>
-                </button>
+                {{-- REMOVED: Dark Theme Toggle Button was here --}}
 
                 <div class="flex items-center mb-4 transition-all">
                     <div class="w-10 h-10 rounded-full bg-red-800 flex-shrink-0 flex items-center justify-center text-sm font-bold text-white border border-red-400 mx-auto group-hover:mx-0">
@@ -140,47 +132,14 @@
             </div>
         </aside>
 
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-100 p-8 transition-colors duration-300">
+        {{-- CHANGED: Background to bg-stone-100 (Dirty White/Warm Gray) --}}
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-stone-100 p-8 transition-colors duration-300">
             @yield('content')
         </main>
 
     </div>
 
-    <script>
-        function toggleTheme() {
-            const body = document.getElementById('app-body');
-            body.classList.toggle('dark-theme');
-            
-            const isDark = body.classList.contains('dark-theme');
-            localStorage.setItem('bfp_bg_theme', isDark ? 'dark' : 'light');
+    {{-- REMOVED: Dark Theme Script was here --}}
 
-            updateIcons(isDark);
-        }
-
-        function updateIcons(isDark) {
-            const sunIcon = document.getElementById('icon-sun');
-            const moonIcon = document.getElementById('icon-moon');
-            const themeText = document.getElementById('theme-text');
-
-            if (isDark) {
-                sunIcon.classList.add('hidden');
-                moonIcon.classList.remove('hidden');
-                themeText.textContent = "Light BG";
-            } else {
-                sunIcon.classList.remove('hidden');
-                moonIcon.classList.add('hidden');
-                themeText.textContent = "Dark BG";
-            }
-        }
-
-        // Initialize theme on load
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('bfp_bg_theme');
-            if (savedTheme === 'dark') {
-                document.getElementById('app-body').classList.add('dark-theme');
-                updateIcons(true);
-            }
-        });
-    </script>
 </body>
 </html>

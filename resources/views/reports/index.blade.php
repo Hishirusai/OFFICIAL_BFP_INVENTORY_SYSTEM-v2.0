@@ -1,6 +1,55 @@
 @extends('layouts.app')
 
 @section('content')
+
+<style>
+    .was-validated select:invalid ~ .validation-msg,
+    .was-validated input:invalid ~ .validation-msg {
+        display: block !important;
+    }
+
+    /* Red borders for invalid fields */
+    .was-validated select:invalid,
+    .was-validated input:invalid {
+        border-color: #ef4444 !important;
+        background-color: #fef2f2;
+    }
+    /* 1. ACTIVE PAGE: Gradient Red (Fixed) */
+    nav[role="navigation"] span[aria-current="page"] span {
+        background-image: linear-gradient(to right, #dc2626, #991b1b) !important; /* Red-600 to Red-800 */
+        color: white !important;
+        border: none !important;
+    }
+
+    /* 2. ALL LINKS (Arrows & Inactive Numbers): White BG + Dark Gray Border */
+    nav[role="navigation"] a {
+        background-color: white !important;
+        color: #374151 !important; /* Gray-700 Text */
+        border: 1px solid #4b5563 !important; /* Gray-600 Border (Dark Gray) */
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* 3. DISABLED ARROWS (e.g. Previous on Page 1): White BG + Dark Gray Border */
+    /* This ensures even the unclickable arrow matches the design */
+    nav[role="navigation"] span[aria-disabled="true"] span {
+        background-color: white !important;
+        color: #9ca3af !important; /* Lighter Gray Text to indicate disabled */
+        border: 1px solid #4b5563 !important; /* Same Dark Gray Border */
+    }
+
+    /* 4. HOVER STATE: Turn Gradient Red + White Text */
+    nav[role="navigation"] a:hover {
+        background-image: linear-gradient(to right, #ef4444, #b91c1c) !important; /* Red-500 to Red-700 */
+        color: white !important;
+        border-color: transparent !important;
+    }
+
+    /* 5. ARROW ICONS: Turn White on Hover */
+    nav[role="navigation"] a:hover svg {
+        color: white !important;
+    }
+</style>
+
     <div class="flex justify-between items-center mb-8">
         <div>
             <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Reports & Logs</h1>
@@ -28,7 +77,7 @@
                         <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
                             <td class="px-5 py-4 font-bold text-gray-700">{{ $log->created_at->format('M d, Y h:i A') }}</td>
                             <td class="px-5 py-4 font-bold">{{ $log->user->name }}</td>
-                            <td class="px-5 py-4 text-center">
+                            <td class="px-5 py-4 text-left">
                                 @if($log->action_type == 'Item Added')
                                     <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase border border-green-200">{{ $log->action_type }}</span>
                                 @elseif($log->action_type == 'Transfer')

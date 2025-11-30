@@ -90,6 +90,7 @@
 
     <form id="searchForm" method="GET" action="{{ route('stations.show', $station->id) }}" class="flex flex-col md:flex-row gap-4 mb-6 items-center">
     
+        {{-- LIVE SEARCH INPUT --}}
         <div class="flex-1 w-full relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -97,13 +98,15 @@
                 </svg>
             </div>
             <input type="text" 
+                id="liveSearchInput" 
                 name="search" 
                 value="{{ request('search') }}" 
-                oninput="debouncedSubmit()"
+                autocomplete="off"
                 class="pl-10 w-full rounded-xl border border-gray-500 bg-gray-50 text-gray-900 placeholder-gray-500 shadow-sm focus:border-blue-600 focus:ring-2 focus:ring-blue-600 py-3 font-medium transition-colors" 
-                placeholder="Search code, name, or type...">
+                placeholder="Search Item (Name, Code, Type)...">
         </div>
 
+        {{-- CONDITION FILTER (Unchanged) --}}
         <div class="w-full md:w-48">
             <select name="condition" onchange="this.form.submit()" 
                     class="w-full rounded-xl border border-gray-500 bg-gray-50 text-gray-900 shadow-sm focus:border-blue-600 focus:ring-2 focus:ring-blue-600 py-3 font-medium cursor-pointer">
@@ -114,6 +117,7 @@
             </select>
         </div>
 
+        {{-- UNIT FILTER (Unchanged) --}}
         <div class="w-full md:w-48">
             <select name="unit" onchange="this.form.submit()" 
                     class="w-full rounded-xl border border-gray-500 bg-gray-50 text-gray-900 shadow-sm focus:border-blue-600 focus:ring-2 focus:ring-blue-600 py-3 font-medium cursor-pointer">
@@ -126,6 +130,7 @@
             </select>
         </div>
 
+        {{-- CLEAR BUTTON (Unchanged) --}}
         @if(request('search') || request('condition') || request('unit'))
             <a href="{{ route('stations.show', $station->id) }}" 
             class="whitespace-nowrap px-6 py-3 bg-red-100 text-red-700 border border-red-300 font-bold rounded-xl shadow-sm hover:bg-red-200 transition flex items-center gap-2">
@@ -737,34 +742,76 @@
     </div>
 
     <script>
-        // --- GLOBAL MODAL CONTROLS ---
+        // --- GLOBAL ON LOAD ---
         document.addEventListener('DOMContentLoaded', function() {
-        // Check if Laravel sent back any errors
-        @if($errors->any())
-            // We check if the errors are related to the Add Item fields
-            // (Adjust these field names if yours are different)
-            @if($errors->has('name') || $errors->has('product_code') || $errors->has('quantity') || $errors->has('unit_cost'))
-                openModal('addItemModal');
+            
+            // 1. SETUP LIVE SEARCH
+            const liveInput = document.getElementById('liveSearchInput');
+            if (liveInput) {
+                liveInput.addEventListener('input', function() {
+                    filterTable(this.value);
+                });
+            }
+
+            // 2. CHECK ERRORS (For Add Item Modal)
+            @if($errors->any())
+                @if($errors->has('name') || $errors->has('product_code') || $errors->has('quantity') || $errors->has('unit_cost'))
+                    openModal('addItemModal');
+                @endif
             @endif
-        @endif
+            
+            // 3. AUTO-HIDE SUCCESS MESSAGE
+            const successMessage = document.getElementById('successMessage');
+            if (successMessage) {
+                setTimeout(function() {
+                    successMessage.classList.add('opacity-0');
+                    setTimeout(function() { successMessage.remove(); }, 1000);
+                }, 3000);
+            }
         });
+
+        // --- LIVE TABLE FILTER FUNCTION ---
+        function filterTable(query) {
+            const filter = query.toLowerCase().trim();
+            const tbody = document.querySelector('table tbody');
+            
+            if (!tbody) return; // Safety check
+
+            const rows = tbody.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                
+                // Assuming your table columns are in this order:
+                // [0]=Code, [1]=Name, [2]=Type, [3]=Qty/Unit, ... [6]=Condition
+                // Adjust indices if your table structure is different
+                if (cells.length > 2) {
+                    const code = cells[0].textContent.toLowerCase();
+                    const name = cells[1].textContent.toLowerCase();
+                    const type = cells[2].textContent.toLowerCase();
+
+                    // Check if the query exists in Code, Name, or Type
+                    if (code.includes(filter) || name.includes(filter) || type.includes(filter)) {
+                        row.style.display = ""; // Show
+                    } else {
+                        row.style.display = "none"; // Hide
+                    }
+                }
+            }
+        }
 
         // --- MODAL CONTROLS ---
         function openModal(modalId) {
             const modal = document.getElementById(modalId);
-            if(modal) {
-                modal.classList.remove('hidden');
-            }
+            if(modal) modal.classList.remove('hidden');
         }
-
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
-            if(modal) {
-                modal.classList.add('hidden');
-            }
+            if(modal) modal.classList.add('hidden');
         }
 
-        // --- CALCULATIONS ---
+        // --- CALCULATIONS (Add Item) ---
         function calculateTotal() {
             let qty = parseFloat(document.getElementById('qty').value) || 0;
             let cost = parseFloat(document.getElementById('unit_cost').value) || 0;
@@ -776,7 +823,7 @@
             totalHidden.value = total;
         }
 
-        // --- NEW: CALCULATIONS (Edit Item) ---
+        // --- CALCULATIONS (Edit Item) ---
         function calculateEditTotal() {
             let qty = parseFloat(document.getElementById('edit_qty').value) || 0;
             let cost = parseFloat(document.getElementById('edit_unit_cost').value) || 0;
@@ -786,7 +833,7 @@
             totalDisplay.value = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        // --- UPDATED EDIT MODAL TRIGGER ---
+        // --- EDIT MODAL TRIGGER ---
         function openEditItemModal(itemId, productCode, name, type, quantity, unitCost, dateAcquired, dateExpiry, description, condition, unit) {
             document.getElementById('edit_product_code').value = productCode;
             document.getElementById('edit_product_code_display').innerText = productCode;
@@ -795,7 +842,7 @@
             document.getElementById('edit_qty').value = quantity;
             document.getElementById('edit_unit_cost').value = unitCost;
 
-            // Date Helper
+            // Date Format Helper
             const formatDate = (dateStr) => {
                 if(!dateStr || dateStr === 'null') return '';
                 return new Date(dateStr).toISOString().split('T')[0];
@@ -807,25 +854,23 @@
             document.getElementById('edit_unit').value = unit;
             document.getElementById('edit_condition').value = condition;
 
-            // Calculate total immediately when modal opens
-            calculateEditTotal();
+            calculateEditTotal(); // Update total immediately
 
             document.getElementById('editItemForm').action = `/stations/{{ $station->id }}/items/${itemId}`;
             openModal('editItemModal');
         }
 
+        // --- FORMAT HELPERS ---
         function formatCurrency(number) {
             const num = parseFloat(number);
-            return isNaN(num) ? number : num.toLocaleString('en-PH', { 
-                minimumFractionDigits: 2, 
-                maximumFractionDigits: 2 
-            });
+            return isNaN(num) ? number : num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
         function formatNumber(number) {
             const num = parseFloat(number);
             return isNaN(num) ? number : num.toLocaleString('en-PH');
         }
-        // --- ITEM DETAILS MODAL (Read Only) ---
+
+        // --- DETAILS MODAL ---
         function openItemDetailsModal(code, name, type, description, qty, unit, unitCost, totalCost, condition, acquired, expiry) {
             document.getElementById('detail_product_code').innerText = code;
             document.getElementById('detail_name').innerHTML = `${name} <span class="text-sm font-medium text-gray-500">(${type})</span>`;
@@ -833,350 +878,176 @@
             document.getElementById('detail_unit_cost').innerText = `₱${formatCurrency(unitCost)}`;
             document.getElementById('detail_total_cost').innerText = `₱${formatCurrency(totalCost)}`;
             
-            // Format Date
             const dateAcquired = new Date(acquired);
-            document.getElementById('detail_acquired').innerText = !isNaN(dateAcquired) ? dateAcquired.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : acquired;
+            document.getElementById('detail_acquired').innerText = !isNaN(dateAcquired) ? dateAcquired.toLocaleDateString('en-US') : acquired;
             
             const dateExpiry = new Date(expiry);
-            document.getElementById('detail_expiry').innerText = (expiry === 'null' || expiry === 'N/A') ? 'N/A' : (!isNaN(dateExpiry) ? dateExpiry.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : expiry);
+            document.getElementById('detail_expiry').innerText = (expiry === 'null' || expiry === 'N/A') ? 'N/A' : (!isNaN(dateExpiry) ? dateExpiry.toLocaleDateString('en-US') : expiry);
             
             document.getElementById('detail_description').innerText = description;
             
             let conditionClass = condition === 'Serviceable' ? 'bg-green-100 text-green-700' : 
-                                 condition === 'Unserviceable' ? 'bg-orange-100 text-orange-700' : 
-                                 'bg-red-100 text-red-700';
+                                condition === 'Unserviceable' ? 'bg-orange-100 text-orange-700' : 
+                                'bg-red-100 text-red-700';
             document.getElementById('detail_condition').innerHTML = `<span class="${conditionClass} px-3 py-1 rounded-full text-xs font-bold uppercase">${condition}</span>`;
             
             openModal('itemDetailsModal');
         }
 
-        // --- EDIT MODAL TRIGGER ---
-        // ✅ FIXED: Added 'unit' parameter at the end
-        function openEditItemModal(itemId, productCode, name, type, quantity, unitCost, dateAcquired, dateExpiry, description, condition, unit) {
-            document.getElementById('edit_product_code').value = productCode;
-            document.getElementById('edit_product_code_display').innerText = productCode;
-            document.getElementById('edit_name').value = name;
-            document.getElementById('edit_type').value = type;
-            document.getElementById('edit_qty').value = quantity;
-            document.getElementById('edit_unit_cost').value = unitCost;
-
-            // Date Helper
-            const formatDate = (dateStr) => {
-                if(!dateStr || dateStr === 'null') return '';
-                return new Date(dateStr).toISOString().split('T')[0];
-            };
-
-            document.getElementById('edit_date_acquired').value = formatDate(dateAcquired);
-            document.getElementById('edit_date_expiry').value = formatDate(dateExpiry);
-            document.getElementById('edit_description').value = description;
-            document.getElementById('edit_unit').value = unit;
-            document.getElementById('edit_condition').value = condition;
-
-            // Calculate total immediately when modal opens
-            calculateEditTotal();
-
-            document.getElementById('editItemForm').action = `/stations/{{ $station->id }}/items/${itemId}`;
-            openModal('editItemModal');
-        }
-
-        // --- DISPOSE MODAL TRIGGER ---
+        // --- DISPOSE MODAL ---
         function openDisposeModal(itemId) {
             document.getElementById('disposeForm').action = `/stations/{{ $station->id }}/items/${itemId}`;
             openModal('disposeItemModal');
         }
 
-        // --- SINGLE TRANSFER TRIGGER (FIXED) ---
+        // --- SINGLE TRANSFER MODAL ---
         function openSingleTransferModal(itemId, name, code, qty, unit) {
-            // 1. Set the Hidden Item ID (Input field)
-            const idInput = document.getElementById('singleTransferItemId');
-            if (idInput) {
-                idInput.value = itemId;
-            }
-
-            // 2. Set Display Texts (These are <p> tags, so use innerText, not value)
+            document.getElementById('singleTransferItemId').value = itemId;
             document.getElementById('singleTransferItemName').innerText = name;
             document.getElementById('singleTransferItemCode').innerText = code;
             
-            // 3. Format and Display Quantity
             const formattedQty = Number(qty).toLocaleString();
             document.getElementById('singleTransferMaxQty').innerText = `${formattedQty} ${unit}`;
 
-            // 4. Setup the Quantity Input
             const qtyInput = document.getElementById('singleTransferQtyInput');
-            qtyInput.value = ''; // Reset input
-            qtyInput.max = qty;  // Set max attribute for validation
+            qtyInput.value = ''; 
+            qtyInput.max = qty;  
             
-            // 5. Update the "Max" text in the error message span
             const maxErrorSpan = document.getElementById('qtyErrorMax');
-            if (maxErrorSpan) {
-                maxErrorSpan.innerText = formattedQty;
-            }
+            if (maxErrorSpan) maxErrorSpan.innerText = formattedQty;
 
-            // 6. Ensure Form Action is correct
             document.getElementById('singleTransferForm').action = "{{ route('items.transfer', $station->id) }}";
-
-            // 7. Show Modal
             openModal('singleTransferModal');
         }
 
-        // --- SUBMIT SINGLE TRANSFER (NEW FUNCTION) ---
+        // --- SUBMIT SINGLE TRANSFER ---
         function submitSingleTransferForm() {
             const form = document.getElementById('singleTransferForm');
             const qtyInput = document.getElementById('singleTransferQtyInput');
             
-            // 1. Manually trigger the quantity validation we wrote
             validateSingleQty(qtyInput);
 
-            // 2. Check for Dropdown validation (Standard HTML5)
-            if (!form.checkValidity()) {
+            if (!form.checkValidity() || !document.getElementById('singleQtyError').classList.contains('hidden')) {
                 form.classList.add('was-validated');
-                return; // Stop if dropdown is empty
+                return; 
             }
-
-            // 3. Check if Quantity Logic failed (is the error message visible?)
-            const errorMsg = document.getElementById('singleQtyError');
-            if (!errorMsg.classList.contains('hidden')) {
-                return; // Stop if custom quantity validation failed
-            }
-
-            // 4. If all good, Submit
-            form.action = "{{ route('items.transfer', $station->id) }}";
             form.submit();
         }
+
         // --- BULK TRANSFER LOGIC ---
-    
-        // Make sure this variable is available (passed from Blade)
-        const availableItems = @json($items); 
+        const availableItems = @json($items->items()); // Note: Use ->items() if paginated, or just $items if all
 
         function addTransferRow() {
-        const container = document.getElementById('transferItemsContainer');
-        const index = container.children.length; 
-        
-        // Handle Pagination: If 'data' exists, use it. Otherwise use the array directly.
-        const itemsList = availableItems.data ? availableItems.data : availableItems;
+            const container = document.getElementById('transferItemsContainer');
+            const index = container.children.length; 
+            
+            // Use the JS array passed from Blade
+            let optionsHtml = '<option value="" disabled selected>Select Item</option>';
+            availableItems.forEach(item => {
+                optionsHtml += `<option value="${item.id}" data-qty="${item.quantity}" data-unit="${item.unit}">
+                                    ${item.name} - ${item.type} (${item.product_code})
+                                </option>`;
+            });
 
-        let optionsHtml = '<option value="" disabled selected>Select Item</option>';
-        itemsList.forEach(item => {
-            // Keep data-qty as RAW NUMBER for logic
-            optionsHtml += `<option value="${item.id}" data-qty="${item.quantity}" data-unit="${item.unit}">
-                                ${item.name} - ${item.type} (${item.product_code})
-                            </option>`;
-        });
-
-        const row = document.createElement('div');
-        row.className = 'transfer-row flex flex-col md:flex-row gap-6 items-start bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm relative transition hover:shadow-md mb-4';
-        
-        row.innerHTML = `
-            <div class="flex-1 w-full">
-                <label class="text-sm font-bold text-gray-500 uppercase mb-2 block tracking-wide">
-                    Item Selection <span class="text-red-500">*</span>
-                </label>
-                <div class="relative">
-                    <select name="transfers[${index}][item_id]" required onchange="updateRowAvailability(this)"
-                            class="w-full px-4 py-3 rounded-xl border border-gray-400 shadow-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none text-base font-medium text-gray-900">
-                        ${optionsHtml}
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            const row = document.createElement('div');
+            row.className = 'transfer-row flex flex-col md:flex-row gap-6 items-start bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm relative transition hover:shadow-md mb-4';
+            
+            row.innerHTML = `
+                <div class="flex-1 w-full">
+                    <label class="text-sm font-bold text-gray-500 uppercase mb-2 block tracking-wide">Item Selection <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <select name="transfers[${index}][item_id]" required onchange="updateRowAvailability(this)"
+                                class="w-full px-4 py-3 rounded-xl border border-gray-400 shadow-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none text-base font-medium text-gray-900">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                    <div class="flex items-center mt-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                        <span class="text-sm font-bold text-gray-500 uppercase mr-3">Available:</span>
+                        <span class="available-qty text-xl font-extrabold text-blue-700">--</span>
                     </div>
                 </div>
-                
-                <div class="flex items-center mt-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-                    <span class="text-sm font-bold text-gray-500 uppercase mr-3">Available Stock:</span>
-                    <span class="available-qty text-xl font-extrabold text-blue-700">--</span>
+                <div class="w-full md:w-56">
+                    <label class="text-sm font-bold text-gray-500 uppercase mb-2 block tracking-wide">Quantity <span class="text-red-500">*</span></label>
+                    <div>
+                        <input type="number" name="transfers[${index}][quantity]" min="1" required oninput="validateRowQty(this)"
+                            class="qty-input w-full px-4 py-3 rounded-xl border border-gray-400 shadow-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold text-center placeholder-gray-500" placeholder="0">
+                        <p class="row-error-msg hidden mt-2 text-sm text-red-600 font-bold text-center"></p>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="w-full md:w-56">
-                <label class="text-sm font-bold text-gray-500 uppercase mb-2 block tracking-wide">
-                    Quantity <span class="text-red-500">*</span>
-                </label>
-                <div>
-                    <input type="number" name="transfers[${index}][quantity]" min="1" required 
-                        oninput="validateRowQty(this)"
-                        class="qty-input w-full px-4 py-3 rounded-xl border border-gray-400 shadow-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-lg font-bold text-gray-900 text-center placeholder-gray-500" 
-                        placeholder="0">
-                    <p class="row-error-msg hidden mt-2 text-sm text-red-600 font-bold text-center"></p>
-                </div>
-            </div>
+                <button type="button" onclick="this.closest('.transfer-row').remove()" class="mt-8 p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition" title="Remove Row">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            `;
+            container.appendChild(row);
+        }
 
-            <button type="button" onclick="this.closest('.transfer-row').remove()" class="mt-8 p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition" title="Remove Row">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            </button>
-        `;
-        
-        container.appendChild(row);
-    }
+        function updateRowAvailability(selectElement) {
+            const row = selectElement.closest('.transfer-row');
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const maxQty = selectedOption.getAttribute('data-qty');
+            const unit = selectedOption.getAttribute('data-unit') || '';
 
-        // --- NEW VALIDATION FUNCTION FOR ROWS ---
+            const stockDisplay = row.querySelector('.available-qty');
+            if (stockDisplay) stockDisplay.innerText = maxQty ? `${parseFloat(maxQty).toLocaleString()} ${unit}` : '--';
+
+            const qtyInput = row.querySelector('.qty-input');
+            if (qtyInput) {
+                maxQty ? qtyInput.max = maxQty : qtyInput.removeAttribute('max');
+                validateRowQty(qtyInput);
+            }
+        }
+
         function validateRowQty(input) {
-        const row = input.closest('.transfer-row');
-        const errorMsg = row.querySelector('.row-error-msg');
-        const max = parseFloat(input.max);
-        const val = parseFloat(input.value);
-
-        let isValid = true;
-        let message = "";
-
-        if (!input.value || val <= 0) {
-            isValid = false;
-            message = "Required";
-        } else if (!isNaN(max) && val > max) {
-            isValid = false;
-            message = "Exceeds Stock";
-        }
-
-        if (!isValid) {
-            errorMsg.innerText = message;
-            errorMsg.classList.remove('hidden');
-            input.classList.add('border-red-500', 'bg-red-50');
-        } else {
-            errorMsg.classList.add('hidden');
-            input.classList.remove('border-red-500', 'bg-red-50');
-        }
-    }
-
-        // --- SUBMIT FUNCTION (Triggers the Validation) ---
-        function submitTransferForm() {
-        const form = document.getElementById('bulkTransferForm');
-        // Validate all inputs before submitting
-        const qtyInputs = form.querySelectorAll('.qty-input');
-        let isCustomValid = true;
-
-        qtyInputs.forEach(input => {
-            validateRowQty(input);
             const row = input.closest('.transfer-row');
             const errorMsg = row.querySelector('.row-error-msg');
-            if (!errorMsg.classList.contains('hidden')) {
-                isCustomValid = false;
-            }
-        });
+            const max = parseFloat(input.max);
+            const val = parseFloat(input.value);
 
-        if (form.checkValidity() && isCustomValid) {
-            form.submit();
-        } else {
-            // Trigger browser validation UI
-            form.reportValidity();
-        }
-    }
+            let message = "";
+            if (!input.value || val <= 0) message = "Required";
+            else if (!isNaN(max) && val > max) message = "Exceeds Stock";
 
-        // 2. Function to Update Availability (With Commas)
-        function updateRowAvailability(selectElement) {
-        const row = selectElement.closest('.transfer-row');
-        const selectedOption = selectElement.options[selectElement.selectedIndex];
-        const maxQty = selectedOption.getAttribute('data-qty');
-        const unit = selectedOption.getAttribute('data-unit') || '';
-
-        // Update Display (With Commas)
-        const stockDisplay = row.querySelector('.available-qty');
-        if (stockDisplay) {
-            if (maxQty) {
-                stockDisplay.innerText = `${parseFloat(maxQty).toLocaleString('en-US')} ${unit}`;
+            if (message) {
+                errorMsg.innerText = message;
+                errorMsg.classList.remove('hidden');
+                input.classList.add('border-red-500', 'bg-red-50');
             } else {
-                stockDisplay.innerText = '--';
+                errorMsg.classList.add('hidden');
+                input.classList.remove('border-red-500', 'bg-red-50');
             }
         }
-
-        // Update Input (Raw Number for Validation)
-        const qtyInput = row.querySelector('.qty-input');
-        if (qtyInput) {
-            if (maxQty) {
-                qtyInput.max = maxQty;
-            } else {
-                qtyInput.removeAttribute('max');
-            }
-            // Re-validate in case user already typed a number
-            validateRowQty(qtyInput);
-        }
-    }
 
         function validateSingleQty(input) {
-        const errorMsg = document.getElementById('singleQtyError');
-        const max = parseFloat(input.max); // Max value set by the openModal function
-        const val = parseFloat(input.value);
+            const errorMsg = document.getElementById('singleQtyError');
+            const max = parseFloat(input.max);
+            const val = parseFloat(input.value);
 
-        if (input.value === '') {
-            // Field is empty
-            errorMsg.innerText = "Quantity is required.";
-            errorMsg.classList.remove('hidden');
-            input.classList.add('border-red-500', 'bg-red-50'); // Add red styling
-        } 
-        else if (val > max) {
-            // Value is too high
-            errorMsg.innerText = `Cannot exceed available stock (Max: ${max})`;
-            errorMsg.classList.remove('hidden');
-            input.classList.add('border-red-500', 'bg-red-50'); // Add red styling
-        } 
-        else {
-            // Valid
-            errorMsg.classList.add('hidden');
-            input.classList.remove('border-red-500', 'bg-red-50'); // Remove red styling
-        }
-    }
-        // --- FILTER LOGIC ---
-        function filterTable() {
-        const searchValue = document.getElementById('tableSearch').value.toLowerCase().trim();
-        const conditionValue = document.getElementById('conditionFilter').value.toLowerCase().trim();
-        const unitValue = document.getElementById('unitFilter').value.toLowerCase().trim();
+            let message = "";
+            if (!input.value) message = "Quantity is required.";
+            else if (val > max) message = `Cannot exceed available stock (Max: ${max})`;
 
-        const tableBody = document.querySelector('table tbody');
-        const rows = tableBody.getElementsByTagName('tr');
-
-        for (let i = 0; i < rows.length; i++) {
-            const cells = rows[i].getElementsByTagName('td');
-            if (cells.length > 0) {
-                const code = cells[0].innerText.toLowerCase();
-                const name = cells[1].innerText.toLowerCase();
-                const type = cells[2].innerText.toLowerCase();
-                const qtyUnit = cells[3].innerText.toLowerCase();
-                const condition = cells[6].innerText.toLowerCase();
-
-                // 1. Loose Search (Includes)
-                const matchesSearch = (searchValue === "") || 
-                                      code.includes(searchValue) || 
-                                      name.includes(searchValue) || 
-                                      type.includes(searchValue);
-
-                // 2. Condition Filter (Handle BER dots)
-                const cleanCondition = condition.replace(/\./g, ''); 
-                const matchesCondition = (conditionValue === "") || 
-                                         cleanCondition.includes(conditionValue) || 
-                                         condition.includes(conditionValue);
-
-                // 3. Unit Filter
-                const matchesUnit = (unitValue === "") || qtyUnit.includes(unitValue);
-
-                if (matchesSearch && matchesCondition && matchesUnit) {
-                    rows[i].style.display = "";
-                } else {
-                    rows[i].style.display = "none";
-                }
+            if (message) {
+                errorMsg.innerText = message;
+                errorMsg.classList.remove('hidden');
+                input.classList.add('border-red-500', 'bg-red-50');
+            } else {
+                errorMsg.classList.add('hidden');
+                input.classList.remove('border-red-500', 'bg-red-50');
             }
         }
-    }
-        
-        // Listen to search input typing for suggestions (if you kept suggestions)
-        // searchInput.addEventListener('input', updateSuggestions); // Uncomment if using suggestion box
 
-        // --- AUTO-HIDE SUCCESS MESSAGE ---
-        document.addEventListener('DOMContentLoaded', function() {
-            const successMessage = document.getElementById('successMessage');
-            if (successMessage) {
-                setTimeout(function() {
-                    successMessage.classList.add('opacity-0');
-                    setTimeout(function() { successMessage.remove(); }, 1000);
-                }, 3000);
-            }
-        });
+        function submitTransferForm() {
+            const form = document.getElementById('bulkTransferForm');
+            const qtyInputs = form.querySelectorAll('.qty-input');
+            let isValid = true;
 
-        let searchTimeout = null;
-        function debouncedSubmit() {
-            // Clear the previous timer
-            clearTimeout(searchTimeout);
-            // Set a new timer to submit the form after 600ms of inactivity
-            searchTimeout = setTimeout(function() {
-                document.getElementById('searchForm').submit();
-            }, 600);
+            qtyInputs.forEach(input => {
+                validateRowQty(input);
+                if (!input.closest('.transfer-row').querySelector('.row-error-msg').classList.contains('hidden')) isValid = false;
+            });
+
+            if (form.checkValidity() && isValid) form.submit();
+            else form.reportValidity();
         }
     </script>
 @endsection
