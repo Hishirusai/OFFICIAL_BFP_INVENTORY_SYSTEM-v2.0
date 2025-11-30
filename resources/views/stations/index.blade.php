@@ -58,7 +58,7 @@
             </div>
 
             <button onclick="openModal('addStationModal')" 
-                    class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition flex items-center text-lg border border-green-700 whitespace-nowrap justify-center w-full md:w-auto">
+                    class="bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-500 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition flex items-center text-lg border border-green-700 whitespace-nowrap justify-center w-full md:w-auto">
                 <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Add Station
             </button>

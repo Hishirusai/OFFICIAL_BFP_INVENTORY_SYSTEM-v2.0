@@ -214,7 +214,7 @@
                     </tr>
                 </thead>
 
-                <tbody class="divide-y divide-gray-100 bg-white text-sm font-bold text-gray-700">
+                <tbody id="tableBody" class="divide-y divide-gray-100 bg-white text-sm font-bold text-gray-700">
                     @forelse($items as $item)
                     <tr class="hover:bg-gray-50 transition duration-150 group cursor-pointer"
                         onclick="openItemDetailsModal(
@@ -258,7 +258,7 @@
                         </td>
 
                         <td class="px-4 py-3 font-extrabold text-emerald-800">
-                            ₱{{ number_format($item->total_cost, 2) }}
+                            ₱{{ number_format($item->quantity * $item->unit_cost, 2) }}
                         </td>
 
                         <td class="px-4 py-3">
@@ -301,14 +301,12 @@
                                     EDIT
                                 </button>
 
-                                <form action="{{ route('items.destroy', ['station' => $station->id, 'item' => $item->id]) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="px-3 py-1.5 rounded-full bg-gradient-to-r from-red-700 to-red-900 text-white text-[10px] font-bold shadow-md hover:shadow-lg hover:from-red-400 hover:to-red-700 transition-all flex items-center justify-center gap-1">
-                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        DISPOSE
-                                    </button>
-                                </form>
+                                <button type="button" 
+                                        onclick="openDisposeModal('{{ $item->id }}')" 
+                                        class="px-3 py-1.5 rounded-full bg-gradient-to-r from-red-700 to-red-900 text-white text-[10px] font-bold shadow-md hover:shadow-lg hover:from-red-400 hover:to-red-700 transition-all flex items-center justify-center gap-1">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    DISPOSE
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -323,17 +321,23 @@
             </table>
         </div>
 
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div id="paginationContainer" class="bg-gray-50 px-6 py-4 border-t border-gray-200">
             {{ $items->links() }}
         </div>
     </div>
 
+    @if ($errors->addItem->any())
+    <script>
+        openModal('addItemModal');
+    </script>
+    @endif
     <div id="addItemModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
         <div class="relative p-8 border w-full max-w-2xl shadow-2xl rounded-3xl bg-white">
             <h3 class="text-2xl font-extrabold text-gray-900 mb-6 border-b pb-4">Add New Item</h3>
             
             <form action="{{ route('items.store', $station->id) }}" method="POST" autocomplete="off" novalidate>
                 @csrf
+                <input type="hidden" name="form_type" value="add_item">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
                     <div class="md:col-span-2">
@@ -629,7 +633,7 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 uppercase mb-2">Quantity to transfer</label>
                     <div class="relative">
-                        <input type="number" name="quantity" id="singleTransferQtyInput" min="1" step="0.01" required 
+                        <input type="number" name="quantity" id="singleTransferQtyInput" min="1" step="1" required 
                             oninput="validateSingleQty(this)"
                             class="w-full px-4 py-3 rounded-xl border border-gray-400 shadow-sm bg-white text-lg font-bold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-gray-500" 
                             placeholder="Enter quantity...">
@@ -657,39 +661,51 @@
 
     <div id="editItemModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
         <div class="relative p-8 border w-full max-w-2xl shadow-2xl rounded-3xl bg-white max-h-[90vh] overflow-y-auto">
-            <h3 class="text-2xl font-extrabold text-gray-900 mb-6 border-b pb-4">Edit Item: <span id="edit_product_code_display" class="font-normal text-sm text-gray-500"></span></h3>
+            
+            {{-- HEADER --}}
+            <div class="mb-6 border-b pb-4">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-2xl font-extrabold text-gray-900">Edit Item:</h3>
+                    {{-- DISPLAY CODE ONLY --}}
+                    <span id="edit_product_code_display" class="bg-blue-100 text-blue-800 text-lg font-mono font-bold px-3 py-1 rounded-lg border border-blue-200">
+                    </span>
+                </div>
+            </div>
             
             <form id="editItemForm" method="POST" autocomplete="off" novalidate>
                 @csrf
                 @method('PUT')
                 
+                <input type="hidden" name="form_type" value="edit_item">
+                <input type="hidden" name="item_id" id="edit_item_id_hidden">
+                
+                {{-- ❌ REMOVED PRODUCT CODE INPUT. IT IS NOT SENT TO SERVER ANYMORE. --}}
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
                     <div class="md:col-span-2">
-                        <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Product Code</label>
-                        <input type="text" id="edit_product_code" name="product_code" readonly class="w-full px-4 py-3 rounded-xl border border-gray-500 bg-gray-100 shadow-inner text-gray-600 cursor-not-allowed">
-                    </div>
-
-                    <div>
                         <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Item Name</label>
                         <input type="text" id="edit_name" name="name" class="w-full px-4 py-3 rounded-xl border border-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none bg-white shadow-inner" required>
+                        @error('name') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Item Type</label>
                         <input type="text" id="edit_type" name="type" class="w-full px-4 py-3 rounded-xl border border-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none bg-white shadow-inner" required>
+                        @error('type') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Quantity</label>
                         <input type="number" id="edit_qty" name="quantity" min="1" oninput="calculateEditTotal()"
                             class="w-full px-4 py-3 rounded-xl border border-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none bg-white shadow-inner" required>
+                        @error('quantity') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Unit Cost (₱)</label>
                         <input type="number" id="edit_unit_cost" name="unit_cost" step="0.01" min="0" oninput="calculateEditTotal()"
                             class="w-full px-4 py-3 rounded-xl border border-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none bg-white shadow-inner" required>
+                        @error('unit_cost') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
                     
                     <div class="md:col-span-2">
@@ -708,7 +724,9 @@
                             <option value="Pairs">Pairs</option>
                             <option value="Sets">Sets</option>
                         </select>
+                        @error('unit') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
+
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Condition</label>
                         <select id="edit_condition" name="condition" class="w-full px-4 py-3 rounded-xl border border-gray-500 text-gray-700 focus:ring-2 focus:ring-emerald-500 outline-none bg-white shadow-inner">
@@ -716,20 +734,25 @@
                             <option value="Unserviceable">Unserviceable</option>
                             <option value="BER">B.E.R.</option>
                         </select>
+                        @error('condition') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Date Acquired</label>
                         <input type="date" id="edit_date_acquired" name="date_acquired" class="w-full px-4 py-3 rounded-xl border border-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none bg-white shadow-inner" required>
+                        @error('date_acquired') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
+
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Date Expiry</label>
                         <input type="date" id="edit_date_expiry" name="date_expiry" class="w-full px-4 py-3 rounded-xl border border-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none bg-white shadow-inner">
+                        @error('date_expiry') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="md:col-span-2">
                         <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Description</label>
                         <textarea id="edit_description" name="description" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none bg-white shadow-inner"></textarea>
+                        @error('description') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
                 </div>
 
@@ -745,18 +768,37 @@
         // --- GLOBAL ON LOAD ---
         document.addEventListener('DOMContentLoaded', function() {
             
-            // 1. SETUP LIVE SEARCH
+            // 1. SETUP LIVE SERVER SEARCH (FETCH)
             const liveInput = document.getElementById('liveSearchInput');
+            let searchTimeout = null;
+
             if (liveInput) {
                 liveInput.addEventListener('input', function() {
-                    filterTable(this.value);
+                    const query = this.value;
+                    // Get the current URL (e.g., stations/1)
+                    const currentUrl = "{{ route('stations.show', $station->id) }}";
+
+                    // Clear previous timer (Debounce)
+                    clearTimeout(searchTimeout);
+
+                    // Wait 400ms after typing stops, then fetch from server
+                    searchTimeout = setTimeout(() => {
+                        fetchResults(currentUrl, query);
+                    }, 400);
                 });
             }
 
             // 2. CHECK ERRORS (For Add Item Modal)
-            @if($errors->any())
-                @if($errors->has('name') || $errors->has('product_code') || $errors->has('quantity') || $errors->has('unit_cost'))
-                    openModal('addItemModal');
+            @if($errors->addItem->any())
+                @if(
+                    $errors->addItem->has('name') ||
+                    $errors->addItem->has('product_code') ||
+                    $errors->addItem->has('quantity') ||
+                    $errors->addItem->has('unit_cost')
+                )
+                    <script>
+                        openModal('addItemModal');
+                    </script>
                 @endif
             @endif
             
@@ -770,35 +812,42 @@
             }
         });
 
-        // --- LIVE TABLE FILTER FUNCTION ---
-        function filterTable(query) {
-            const filter = query.toLowerCase().trim();
-            const tbody = document.querySelector('table tbody');
-            
-            if (!tbody) return; // Safety check
+        // --- NEW: FETCH RESULTS FUNCTION ---
+        function fetchResults(url, query) {
+            // Build the URL with the search query
+            const fetchUrl = `${url}?search=${encodeURIComponent(query)}`;
+            const tbody = document.getElementById('tableBody');
 
-            const rows = tbody.getElementsByTagName('tr');
+            // Optional: Visual loading state
+            if (tbody) tbody.style.opacity = '0.5';
 
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const cells = row.getElementsByTagName('td');
-                
-                // Assuming your table columns are in this order:
-                // [0]=Code, [1]=Name, [2]=Type, [3]=Qty/Unit, ... [6]=Condition
-                // Adjust indices if your table structure is different
-                if (cells.length > 2) {
-                    const code = cells[0].textContent.toLowerCase();
-                    const name = cells[1].textContent.toLowerCase();
-                    const type = cells[2].textContent.toLowerCase();
+            fetch(fetchUrl)
+                .then(response => response.text())
+                .then(html => {
+                    // Convert text response to HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
 
-                    // Check if the query exists in Code, Name, or Type
-                    if (code.includes(filter) || name.includes(filter) || type.includes(filter)) {
-                        row.style.display = ""; // Show
-                    } else {
-                        row.style.display = "none"; // Hide
+                    // A. Swap the Table Rows
+                    const newBody = doc.getElementById('tableBody');
+                    if (newBody && tbody) {
+                        tbody.innerHTML = newBody.innerHTML;
                     }
-                }
-            }
+
+                    // B. Swap the Pagination
+                    const currentPagination = document.getElementById('paginationContainer');
+                    const newPagination = doc.getElementById('paginationContainer');
+                    if (newPagination && currentPagination) {
+                        currentPagination.innerHTML = newPagination.innerHTML;
+                    }
+                    
+                    // Restore Opacity
+                    if (tbody) tbody.style.opacity = '1';
+                })
+                .catch(err => {
+                    console.error('Search failed:', err);
+                    if (tbody) tbody.style.opacity = '1';
+                });
         }
 
         // --- MODAL CONTROLS ---
@@ -834,31 +883,69 @@
         }
 
         // --- EDIT MODAL TRIGGER ---
+        // --- EDIT MODAL TRIGGER ---
+        // --- EDIT MODAL TRIGGER ---
         function openEditItemModal(itemId, productCode, name, type, quantity, unitCost, dateAcquired, dateExpiry, description, condition, unit) {
-            document.getElementById('edit_product_code').value = productCode;
+        
+            // 1. Show Visual Text Only (No hidden input needed for this field)
             document.getElementById('edit_product_code_display').innerText = productCode;
+            
+            // 2. Fill the rest of the form
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_type').value = type;
             document.getElementById('edit_qty').value = quantity;
             document.getElementById('edit_unit_cost').value = unitCost;
+            document.getElementById('edit_item_id_hidden').value = itemId;
 
-            // Date Format Helper
             const formatDate = (dateStr) => {
                 if(!dateStr || dateStr === 'null') return '';
                 return new Date(dateStr).toISOString().split('T')[0];
             };
-
             document.getElementById('edit_date_acquired').value = formatDate(dateAcquired);
             document.getElementById('edit_date_expiry').value = formatDate(dateExpiry);
             document.getElementById('edit_description').value = description;
             document.getElementById('edit_unit').value = unit;
             document.getElementById('edit_condition').value = condition;
 
-            calculateEditTotal(); // Update total immediately
-
+            calculateEditTotal(); 
+            // Fix URL
             document.getElementById('editItemForm').action = `/stations/{{ $station->id }}/items/${itemId}`;
             openModal('editItemModal');
         }
+
+        // --- REOPEN ON ERROR ---
+        document.addEventListener('DOMContentLoaded', function() {
+            @if($errors->any())
+                const formType = "{{ old('form_type') }}";
+                if (formType === 'edit_item') {
+                    // Restore Text (Visual only)
+                    // Note: We use the old('item_id') to fetch the item again if needed, 
+                    // but usually just showing the modal is enough.
+                    // Ideally we should pass the code back from old input, but since we didn't submit it, 
+                    // we rely on the user cancelling or trying again.
+                    // For now, let's just re-open the modal.
+                    
+                    const oldItemId = "{{ old('item_id') }}";
+                    document.getElementById('edit_item_id_hidden').value = oldItemId;
+                    
+                    // Repopulate other fields
+                    document.getElementById('edit_name').value = "{{ old('name') }}";
+                    document.getElementById('edit_type').value = "{{ old('type') }}";
+                    document.getElementById('edit_qty').value = "{{ old('quantity') }}";
+                    document.getElementById('edit_unit_cost').value = "{{ old('unit_cost') }}";
+                    document.getElementById('edit_unit').value = "{{ old('unit') }}";
+                    document.getElementById('edit_condition').value = "{{ old('condition') }}";
+                    document.getElementById('edit_date_acquired').value = "{{ old('date_acquired') }}";
+                    document.getElementById('edit_date_expiry').value = "{{ old('date_expiry') }}";
+                    document.getElementById('edit_description').value = "{{ old('description') }}";
+
+                    document.getElementById('editItemForm').action = `/stations/{{ $station->id }}/items/${oldItemId}`;
+
+                    calculateEditTotal();
+                    openModal('editItemModal');
+                }
+            @endif
+        });
 
         // --- FORMAT HELPERS ---
         function formatCurrency(number) {
@@ -890,8 +977,6 @@
                                 condition === 'Unserviceable' ? 'bg-orange-100 text-orange-700' : 
                                 'bg-red-100 text-red-700';
             document.getElementById('detail_condition').innerHTML = `<span class="${conditionClass} px-3 py-1 rounded-full text-xs font-bold uppercase">${condition}</span>`;
-            
-            openModal('itemDetailsModal');
         }
 
         // --- DISPOSE MODAL ---
@@ -1049,5 +1134,6 @@
             if (form.checkValidity() && isValid) form.submit();
             else form.reportValidity();
         }
+        
     </script>
 @endsection

@@ -35,7 +35,7 @@
         
         @if(Auth::user()->role === 'super_admin')
         <button onclick="openModal('addUserModal')" 
-                class="bg-gradient-to-r from-emerald-600 to-emerald-800 hover:from-emerald-700 hover:to-emerald-900 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center text-lg transition transform hover:scale-105 border border-emerald-700">
+                class="bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-500 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center transition-all">
             <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
             Add New User
         </button>

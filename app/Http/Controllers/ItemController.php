@@ -5,25 +5,27 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Item;
 use App\Models\Station;
-use App\Models\ActivityLog; // ✅ Import
-use Illuminate\Support\Facades\Auth; // ✅ Import
+use App\Models\ActivityLog;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class ItemController extends Controller
 {
     public function store(Request $request, Station $station)
     {
+        // STORE needs validation because it's a new item
         $validated = $request->validate([
             'product_code'  => 'required|string|unique:items,product_code',
             'name'          => 'required|string',
             'type'          => 'required|string',
             'quantity'      => 'required|integer|min:1',
-            'unit'          => 'required|string', 
+            'unit'          => 'required|string',
             'unit_cost'     => 'required|numeric|min:0',
             'date_acquired' => 'required|date|before_or_equal:9999-12-31',
             'date_expiry'   => 'required|date|before_or_equal:9999-12-31',
-            'description'   => 'nullable|string', 
-        ]);
+            'description'   => 'nullable|string',
+        ], [], [], 'addItem'); 
 
         $totalCost = $validated['quantity'] * $validated['unit_cost'];
         $condition = (new Carbon($validated['date_expiry']))->isPast() ? 'Unserviceable' : 'Serviceable';
@@ -35,7 +37,6 @@ class ItemController extends Controller
             ...$validated 
         ]);
 
-        // 📝 LOG: Creation
         ActivityLog::create([
             'user_id'     => Auth::id(),
             'action_type' => 'Item Created',
@@ -47,42 +48,50 @@ class ItemController extends Controller
 
     public function update(Request $request, Station $station, Item $item)
     {
+        // ✅ FIXED: Removed 'product_code' from validation entirely.
+        // We are not updating the code, so we don't check it. No more "Already Taken" error.
         $validated = $request->validate([
-            'product_code'  => 'required|string|unique:items,product_code,' . $item->id, 
             'name'          => 'required|string',
             'type'          => 'required|string',
             'quantity'      => 'required|integer|min:1',
             'unit'          => 'required|string',
             'unit_cost'     => 'required|numeric|min:0',
             'date_acquired' => 'required|date|before_or_equal:9999-12-31',
-            'date_expiry'   => 'required|date|before_or_equal:9999-12-31',
+            'date_expiry'   => 'nullable|date|before_or_equal:9999-12-31',
             'description'   => 'nullable|string', 
+            'condition'     => 'required|string',
         ]);
         
-        // Calculate Changes for Logging
-        $oldQty = $item->quantity;
+        // 1. Find the Item using the ID from the Hidden Form Input
+        // This is safer than relying on the URL parameter
+        $targetItem = Item::findOrFail($request->item_id);
+
+        // 2. Calculations
+        $oldQty = $targetItem->quantity;
         $newQty = $validated['quantity'];
         $qtyDiff = $newQty - $oldQty;
         
         $totalCost = $newQty * $validated['unit_cost'];
-        $condition = (new Carbon($validated['date_expiry']))->isPast() ? 'Unserviceable' : 'Serviceable';
+        $condition = (new Carbon($validated['date_expiry']))->isPast() ? 'Unserviceable' : $validated['condition'];
 
-        $item->update([
+        // 3. Update
+        // Only fields in $validated are updated. Product Code is NOT touched.
+        $targetItem->update([
             'total_cost' => $totalCost,
             'condition'  => $condition,
             ...$validated
         ]);
 
-        // 📝 LOG: Smart Update Logic
+        // 4. Logging
         if ($qtyDiff > 0) {
             $action = 'Stock Added';
-            $details = "Added {$qtyDiff} {$item->unit} to '{$item->name}'. New Total: {$newQty}.";
+            $details = "Added {$qtyDiff} {$targetItem->unit} to '{$targetItem->name}'. New Total: {$newQty}.";
         } elseif ($qtyDiff < 0) {
             $action = 'Stock Deducted';
-            $details = "Removed " . abs($qtyDiff) . " {$item->unit} from '{$item->name}'. Remaining: {$newQty}.";
+            $details = "Removed " . abs($qtyDiff) . " {$targetItem->unit} from '{$targetItem->name}'. Remaining: {$newQty}.";
         } else {
             $action = 'Item Updated';
-            $details = "Updated details for '{$item->name}' (Code: {$item->product_code}).";
+            $details = "Updated details for '{$targetItem->name}' (Code: {$targetItem->product_code}).";
         }
 
         ActivityLog::create([
@@ -96,10 +105,9 @@ class ItemController extends Controller
 
     public function destroy(Station $station, Item $item)
     {
-        $itemName = $item->name; // Capture name before delete
+        $itemName = $item->name; 
         $item->delete(); 
 
-        // 📝 LOG: Disposal
         ActivityLog::create([
             'user_id'     => Auth::id(),
             'action_type' => 'Item Disposed',
