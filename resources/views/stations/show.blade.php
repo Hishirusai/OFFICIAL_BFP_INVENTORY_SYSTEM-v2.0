@@ -605,7 +605,7 @@
                 <div class="flex justify-end space-x-4 mt-10 border-t pt-6">
                     <button type="button" onclick="closeModal('globalTransferModal')" class="px-8 py-4 bg-gray-100 text-gray-700 rounded-xl text-base font-bold hover:bg-gray-200 transition">Cancel</button>
                     <button type="button" onclick="submitTransferForm()" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl text-base font-bold hover:from-blue-700 hover:to-blue-900 transition shadow-lg">
-                        Confirm Transferr
+                        Confirm Transfer
                     </button>
                 </div>
             </form>
