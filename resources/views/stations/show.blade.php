@@ -325,7 +325,7 @@
                         <td class="px-4 py-3 text-center">
                             <div class="flex flex-col xl:flex-row items-center justify-center gap-2">
                                 
-                                <button onclick="openSingleTransferModal(
+                                <button onclick="event.stopPropagation(); openSingleTransferModal(
                                     '{{ $item->id }}', '{{ $item->name }}', '{{ $item->product_code }}', 
                                     '{{ $item->quantity }}', '{{ $item->unit }}'
                                 )" class="px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-700 to-blue-900 text-white text-[10px] font-bold shadow-md hover:shadow-lg hover:from-blue-400 hover:to-blue-700 transition-all flex items-center justify-center gap-1">
@@ -333,7 +333,7 @@
                                     TRANSFER
                                 </button>
 
-                                <button onclick="openEditItemModal(
+                                <button onclick="event.stopPropagation(); openEditItemModal(
                                     '{{ $item->id }}', '{{ $item->product_code }}', '{{ $item->name }}', '{{ $item->type }}', 
                                     '{{ $item->quantity }}', '{{ $item->unit_cost }}', '{{ $item->date_acquired }}', 
                                     '{{ $item->date_expiry }}', '{{ $item->description }}', '{{ $item->condition }}', '{{ $item->unit }}'
@@ -342,8 +342,8 @@
                                     EDIT
                                 </button>
 
-                                <button type="button" 
-                                        onclick="openDisposeModal('{{ $item->id }}')" 
+                                <button onclick="event.stopPropagation(); openDisposeModal(
+                                        '{{ $item->id }}')" 
                                         class="px-3 py-1.5 rounded-full bg-gradient-to-r from-red-700 to-red-900 text-white text-[10px] font-bold shadow-md hover:shadow-lg hover:from-red-400 hover:to-red-700 transition-all flex items-center justify-center gap-1">
                                     <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                     DISPOSE
@@ -613,7 +613,7 @@
     </div>
 
     <div id="singleTransferModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
-        <div class="relative p-8 border w-full max-w-xl shadow-2xl rounded-3xl bg-white max-h-[90vh] overflow-y-auto">
+        <div class="relative p-8 border w-full max-w-5xl shadow-2xl rounded-3xl bg-white max-h-[90vh] overflow-y-auto">
             
             <div class="mb-6 border-b pb-4">
                 <h3 class="text-3xl font-extrabold text-gray-900">Transfer Item</h3>

@@ -61,37 +61,25 @@ class TransferController extends Controller
                 // Transfer Logic
                 $itemToTransfer->decrement('quantity', $transferData['quantity']);
 
-                $destinationItem = Item::where('station_id', $toStation->id)
-                    ->where('product_code', $itemToTransfer->product_code)
-                    ->first();
+$destinationItem = Item::where('station_id', $toStation->id)
+    ->where('product_code', $itemToTransfer->product_code)
+    ->first();
 
-                if ($destinationItem) {
-                    $destinationItem->increment('quantity', $transferData['quantity']);
-                    $destinationItem->update(['total_cost' => $destinationItem->quantity * $destinationItem->unit_cost]);
-                } else {
-                    $newItem = $itemToTransfer->replicate();
-                    $newItem->station_id = $toStation->id;
-                    $newItem->quantity = $transferData['quantity'];
-                    $newItem->total_cost = $transferData['quantity'] * $itemToTransfer->unit_cost;
-                    $newItem->save();
-                }
-
-                if ($destinationItem) {
-                    // [Existing Logic] If item exists, just add stock
-                    $destinationItem->increment('quantity', $transferData['quantity']);
-                    $destinationItem->update(['total_cost' => $destinationItem->quantity * $destinationItem->unit_cost]);
-                } else {
-                    // [Existing Logic] Item does NOT exist, create it
-                    $newItem = $itemToTransfer->replicate();
-                    $newItem->station_id = $toStation->id;
-                    $newItem->quantity = $transferData['quantity'];
-                    $newItem->total_cost = $transferData['quantity'] * $itemToTransfer->unit_cost;
-                    
-                    // ✅ ADD THIS LINE: Set date_acquired to NOW (today)
-                    $newItem->date_acquired = now(); 
-
-                    $newItem->save();
-                }
+if ($destinationItem) {
+    // item already exists at destination
+    $destinationItem->increment('quantity', $transferData['quantity']);
+    $destinationItem->update([
+        'total_cost' => $destinationItem->quantity * $destinationItem->unit_cost,
+    ]);
+} else {
+    // create it once
+    $newItem = $itemToTransfer->replicate();
+    $newItem->station_id   = $toStation->id;
+    $newItem->quantity     = $transferData['quantity'];
+    $newItem->total_cost   = $transferData['quantity'] * $itemToTransfer->unit_cost;
+    $newItem->date_acquired = now();
+    $newItem->save();
+}
 
                 // <--- CHANGE 2: Save item details to the array for the receipt
                 $transferredItemsSummary[] = [
@@ -110,20 +98,7 @@ class TransferController extends Controller
                     'user_id'     => Auth::id(),
                     'action_type' => $actionType,
                     'details'     => "Transferred {$transferData['quantity']} {$itemToTransfer->unit} of '{$itemToTransfer->name}' to {$toStation->name}.",
-                    'metadata'    => [
-                        'from_station' => $station->name,
-                        'to_station'   => $toStation->name,
-                        'product_code' => $itemToTransfer->product_code,
-                        'name'         => $itemToTransfer->name,
-                        'type'         => $itemToTransfer->type,
-                        'quantity'     => $transferData['quantity'],
-                        'unit'         => $itemToTransfer->unit,
-                        'unit_cost'    => $itemToTransfer->unit_cost,
-                        'total_cost'   => $transferData['quantity'] * $itemToTransfer->unit_cost,
-                        'condition'    => $itemToTransfer->condition,
-                        'date_expiry'  => $itemToTransfer->date_expiry,
-                        'notes'        => $request->notes,
-                    ]
+                    
                 ]);
             }
 
