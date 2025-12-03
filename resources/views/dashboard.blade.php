@@ -104,46 +104,46 @@
             </div>
         </div>
 
-    </div>
+        </div>
 
-    {{-- CHART SECTION --}}
-    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 mb-10">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <div>
-                <h4 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                    Item Statistics
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </h4>
-                <p class="text-sm text-gray-500 mt-1">
-                    Acquisition per Month ({{ $selectedYear }})
-                    @if(request('station_id'))
-                        <span class="ml-1 px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-bold">Filtered</span>
-                    @endif
-                </p>
-            </div>
-            
-            <div class="flex flex-wrap items-center gap-4 text-sm font-medium mt-4 md:mt-0">
-                {{-- Legend --}}
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span> Serviceable
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-orange-500"></span> Unserviceable
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-red-600"></span> B.E.R.
+        {{-- CHART SECTION --}}
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 mb-10">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div>
+                    <h4 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        Item Statistics
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </h4>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Acquisition per Month ({{ $selectedYear }})
+                        @if(request('station_id'))
+                            <span class="ml-1 px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-bold">Filtered</span>
+                        @endif
+                    </p>
                 </div>
                 
-                {{-- Year Filter Form --}}
-                <div class="ml-4">
+                <div class="flex flex-col md:flex-row md:items-center gap-4 mt-4 md:mt-0">
+                    {{-- NEW: Buttons for switching views --}}
+                    <div class="flex bg-gray-100 p-1 rounded-lg">
+                        <button onclick="updateChart('conditions')" id="btn-conditions" class="px-3 py-1.5 text-xs md:text-sm font-bold rounded-md shadow-sm bg-white text-gray-800 transition-all">
+                            Conditions
+                        </button>
+                        <button onclick="updateChart('total_items')" id="btn-total-items" class="px-3 py-1.5 text-xs md:text-sm font-bold rounded-md text-gray-500 hover:text-gray-700 transition-all">
+                            Total Items
+                        </button>
+                        <button onclick="updateChart('total_value')" id="btn-total-value" class="px-3 py-1.5 text-xs md:text-sm font-bold rounded-md text-gray-500 hover:text-gray-700 transition-all">
+                            Total Value
+                        </button>
+                    </div>
+
+                    {{-- Year Filter Form --}}
                     <form method="GET" action="{{ route('dashboard') }}">
-                        {{-- Preserve Station selection when changing Year --}}
                         @if(request('station_id'))
                             <input type="hidden" name="station_id" value="{{ request('station_id') }}">
                         @endif
                         
                         <div class="relative">
-                            <select name="year" onchange="this.form.submit()" class="appearance-none border border-gray-200 rounded-lg pl-3 pr-8 py-1 text-gray-600 text-sm focus:outline-none focus:border-blue-500 cursor-pointer hover:bg-gray-50">
+                            <select name="year" onchange="this.form.submit()" class="appearance-none border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 text-gray-600 text-sm focus:outline-none focus:border-blue-500 cursor-pointer hover:bg-gray-50 font-bold">
                                 @if($availableYears->isEmpty())
                                     <option value="{{ date('Y') }}">{{ date('Y') }}</option>
                                 @else
@@ -161,78 +161,115 @@
                     </form>
                 </div>
             </div>
+
+            {{-- Legend --}}
+            <div id="conditions-legend" class="flex flex-wrap items-center gap-4 text-sm font-medium mb-4">
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Serviceable</div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-500"></span> Unserviceable</div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-600"></span> B.E.R.</div>
+            </div>
+
+            {{-- The Chart Container --}}
+            <div id="itemStatisticsChart" class="w-full min-h-[350px]"></div>
         </div>
-
-        {{-- The Chart Container --}}
-        <div id="itemStatisticsChart" class="w-full min-h-[350px]"></div>
-    </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Data passed from Controller
-            const chartData = @json($chartData);
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const rawData = @json($chartData);
 
-            // STACKING ORDER LOGIC NG ARRAY FOR ITEMS
-            // 1. Serviceable (Green) -> TOP (Last in array)
-            // 2. Unserviceable (Orange) -> MIDDLE
-            // 3. B.E.R. (Red) -> BOTTOM (First in array)
+        // STACKING ORDER LOGIC NG ARRAY FOR ITEMS
+        // 1. Serviceable (Green) -> TOP
+        // 2. Unserviceable (Orange) -> MIDDLE
+        // 3. B.E.R. (Red) -> BOTTOM
 
-            var options = {
-                series: [
-                    { name: 'B.E.R.', data: chartData.BER },
-                    { name: 'Unserviceable', data: chartData.Unserviceable },
-                    { name: 'Serviceable', data: chartData.Serviceable }
-                ],
-                chart: {
-                    type: 'bar',
-                    height: 350,
-                    stacked: true, 
-                    toolbar: { show: false },
-                    zoom: { enabled: false },
-                    fontFamily: 'inherit'
-                },
-                // COLORS MUST MATCH THE SERIES ORDER ABOVE PARA PAAYOS AND AVOID SIRA
-                // 1. Red (for BER)
-                // 2. Orange (for Unserviceable)
-                // 3. Green (for Serviceable)
-                colors: ['#dc2626', '#f97316', '#10b981'],
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        borderRadius: 4,
-                        columnWidth: '40%',
-                    },
-                },
-                dataLabels: { enabled: false },
-                xaxis: {
-                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    axisBorder: { show: false },
-                    axisTicks: { show: false },
-                    labels: { style: { colors: '#9ca3af', fontSize: '12px' } }
-                },
-                yaxis: {
-                    labels: { style: { colors: '#9ca3af', fontSize: '12px' } }
-                },
-                grid: {
-                    show: true,
-                    borderColor: '#f3f4f6',
-                    strokeDashArray: 4,
-                    padding: { top: 0, right: 0, bottom: 0, left: 10 } 
-                },
-                legend: { show: false },
-                tooltip: {
-                    y: {
-                        formatter: function (val) {
-                            return val + " Units"
-                        }
-                    }
-                }
-            };
+        // Setup Data Groups
+        const seriesData = {
+            conditions: [
+                { name: 'B.E.R.', data: rawData.BER },
+                { name: 'Unserviceable', data: rawData.Unserviceable },
+                { name: 'Serviceable', data: rawData.Serviceable }
+            ],
+            total_items: [
+                { name: 'Total Items', data: rawData.TotalItems }
+            ],
+            total_value: [
+                { name: 'Total Value', data: rawData.TotalValue }
+            ]
+        };
 
-            var chart = new ApexCharts(document.querySelector("#itemStatisticsChart"), options);
-            chart.render();
-        });
-    </script>
+        var options = {
+            series: seriesData.conditions,
+            chart: {
+                type: 'bar',
+                height: 350,
+                stacked: true,
+                toolbar: { show: false },
+                animations: { enabled: true }
+            },
+            colors: ['#dc2626', '#f97316', '#10b981'],
+            plotOptions: {
+                bar: { borderRadius: 4, columnWidth: '40%' }
+            },
+            dataLabels: { enabled: false },
+            xaxis: {
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                labels: { style: { colors: '#9ca3af', fontSize: '12px' } }
+            },
+            yaxis: {
+                labels: { style: { colors: '#9ca3af', fontSize: '12px' }, formatter: (val) => val.toFixed(0) }
+            },
+            grid: { borderColor: '#f3f4f6', strokeDashArray: 4 },
+            legend: { show: false },
+            tooltip: { y: { formatter: (val) => val + " Units" } }
+        };
+
+        window.myChart = new ApexCharts(document.querySelector("#itemStatisticsChart"), options);
+        window.myChart.render();
+
+        // Function to Switch Tabs
+        window.updateChart = function(type) {
+            // 1. Reset Buttons
+            document.querySelectorAll('#btn-conditions, #btn-total-items, #btn-total-value').forEach(btn => {
+                btn.className = "px-3 py-1.5 text-xs md:text-sm font-bold rounded-md text-gray-500 hover:text-gray-700 transition-all";
+            });
+            
+            // 2. Active Button
+            let activeId = type === 'conditions' ? 'btn-conditions' : (type === 'total_items' ? 'btn-total-items' : 'btn-total-value');
+            document.getElementById(activeId).className = "px-3 py-1.5 text-xs md:text-sm font-bold rounded-md shadow-sm bg-white text-gray-800 transition-all";
+
+            // 3. Toggle Legend
+            document.getElementById('conditions-legend').style.display = (type === 'conditions') ? 'flex' : 'none';
+
+            // 4. Update Chart Options
+            let newOptions = {};
+            if (type === 'conditions') {
+                newOptions = {
+                    chart: { stacked: true },
+                    colors: ['#dc2626', '#f97316', '#10b981'],
+                    tooltip: { y: { formatter: (val) => val + " Units" } },
+                    yaxis: { labels: { formatter: (val) => val.toFixed(0) } }
+                };
+            } else if (type === 'total_items') {
+                newOptions = {
+                    chart: { stacked: false },
+                    colors: ['#3b82f6'],
+                    tooltip: { y: { formatter: (val) => val + " Units" } },
+                    yaxis: { labels: { formatter: (val) => val.toFixed(0) } }
+                };
+            } else if (type === 'total_value') {
+                newOptions = {
+                    chart: { stacked: false },
+                    colors: ['#1e293b'],
+                    tooltip: { y: { formatter: (val) => "₱ " + val.toLocaleString() } },
+                    yaxis: { labels: { formatter: (val) => "₱" + (val >= 1000 ? (val/1000).toFixed(0) + "k" : val) } }
+                };
+            }
+
+            window.myChart.updateOptions(newOptions);
+            window.myChart.updateSeries(seriesData[type]);
+        }
+    });
+</script>
 @endsection

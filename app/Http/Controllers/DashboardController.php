@@ -56,15 +56,21 @@ class DashboardController extends Controller
 
         // Initialize arrays with 0 for all 12 months (Jan-Dec)
         $chartData = [
+            // Conditions
             'Serviceable'   => array_fill(0, 12, 0),
             'Unserviceable' => array_fill(0, 12, 0),
             'BER'           => array_fill(0, 12, 0),
+            
+            // Total Items and Value stuff
+            'TotalItems'    => array_fill(0, 12, 0),
+            'TotalValue'    => array_fill(0, 12, 0),
         ];
 
         // Fetch items for the SELECTED year
+        // NOTE: I added 'total_cost' here so we can calculate the value graph
         $itemsForChart = (clone $query)
             ->whereYear('date_acquired', $selectedYear)
-            ->get(['date_acquired', 'condition', 'quantity']);
+            ->get(['date_acquired', 'condition', 'quantity', 'total_cost']);
 
         foreach ($itemsForChart as $item) {
             if (!$item->date_acquired) continue;
@@ -75,11 +81,18 @@ class DashboardController extends Controller
             
             $condition = $item->condition;
             $qty = (int) $item->quantity;
+            $cost = (float) $item->total_cost;
 
             // Add quantity to the correct month/condition bucket
             if (isset($chartData[$condition])) {
                 $chartData[$condition][$monthIndex] += $qty;
             }
+
+            // Fill Total Items (Regardless of condition)
+            $chartData['TotalItems'][$monthIndex] += $qty;
+
+            // Fill Total Value
+            $chartData['TotalValue'][$monthIndex] += $cost;
         }
 
         // 6. Send data to the view
