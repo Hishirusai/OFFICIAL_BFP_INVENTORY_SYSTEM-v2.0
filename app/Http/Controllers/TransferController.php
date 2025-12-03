@@ -92,15 +92,28 @@ if ($destinationItem) {
                     'unit_cost'    => $itemToTransfer->unit_cost, 
                     'total_cost'   => $transferData['quantity'] * $itemToTransfer->unit_cost, 
                 ];
-
-                // Log Activity
-                ActivityLog::create([
-                    'user_id'     => Auth::id(),
-                    'action_type' => $actionType,
-                    'details'     => "Transferred {$transferData['quantity']} {$itemToTransfer->unit} of '{$itemToTransfer->name}' to {$toStation->name}.",
-                    
-                ]);
             }
+
+            // ✅ Log Activity AFTER loop (single entry for bulk, single entry for single transfer)
+            $detailsText = $isBulk 
+                ? "Transferred " . count($transferredItemsSummary) . " items to {$toStation->name}."
+                : "Transferred {$transferredItemsSummary[0]['quantity']} {$transferredItemsSummary[0]['unit']} of '{$transferredItemsSummary[0]['name']}' to {$toStation->name}.";
+
+            ActivityLog::create([
+                'user_id'     => Auth::id(),
+                'action_type' => $actionType,
+                'details'     => $detailsText,
+                'metadata'    => [
+                    'from_station_id'   => $station->id,
+                    'from_station_name' => $station->name,
+                    'from_station_location' => $station->location,
+                    'to_station_id'     => $toStation->id,
+                    'to_station_name'   => $toStation->name,
+                    'to_station_location' => $toStation->location,
+                    'items'             => $transferredItemsSummary,
+                    'notes'             => $request->notes,
+                ]
+            ]);
 
             // <--- CHANGE 3: Actually SEND the notification
             $toStation->notify(new TransferredNotification(

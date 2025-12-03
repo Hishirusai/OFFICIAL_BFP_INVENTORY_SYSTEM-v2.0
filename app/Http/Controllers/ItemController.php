@@ -97,12 +97,29 @@ class ItemController extends Controller
         ]);
 
         // 4. Logging
+        $metadata = [
+            'product_code' => $targetItem->product_code,
+            'name'         => $targetItem->name,
+            'quantity'     => $newQty, // Use new quantity
+            'unit'         => $targetItem->unit,
+            'unit_cost'    => $validated['unit_cost'],
+            'total_cost'   => $totalCost,
+            'condition'    => $condition,
+            'date_expiry'  => $validated['date_expiry'] ?? null,
+        ];
+
         if ($qtyDiff > 0) {
             $action = 'Stock Added';
             $details = "Added {$qtyDiff} {$targetItem->unit} to '{$targetItem->name}'. New Total: {$newQty}.";
+            // ✅ Stock Added: Total cost (after addition) and Cost added
+            $metadata['total_cost_after'] = $totalCost; // Total cost of items now
+            $metadata['cost_added'] = $qtyDiff * $validated['unit_cost']; // How much is being added
         } elseif ($qtyDiff < 0) {
             $action = 'Stock Deducted';
             $details = "Removed " . abs($qtyDiff) . " {$targetItem->unit} from '{$targetItem->name}'. Remaining: {$newQty}.";
+            // ✅ Stock Deducted: Total cost after deduction and Cost being deducted
+            $metadata['total_cost_after'] = $totalCost; // Total cost after deduction
+            $metadata['cost_deducted'] = abs($qtyDiff) * $validated['unit_cost']; // Cost being deducted
         } else {
             $action = 'Item Updated';
             $details = "Updated details for '{$targetItem->name}' (Code: {$targetItem->product_code}).";
@@ -112,17 +129,7 @@ class ItemController extends Controller
             'user_id'     => Auth::id(),
             'action_type' => $action,
             'details'     => $details,
-            // ✅ SAVE UPDATED DETAILS
-            'metadata'    => [
-                'product_code' => $targetItem->product_code,
-                'name'         => $targetItem->name,
-                'quantity'     => $newQty, // Use new quantity
-                'unit'         => $targetItem->unit,
-                'unit_cost'    => $validated['unit_cost'],
-                'total_cost'   => $totalCost,
-                'condition'    => $condition,
-                'date_expiry'  => $validated['date_expiry'] ?? null,
-            ]
+            'metadata'    => $metadata
         ]);
 
         return redirect()->route('stations.show', $station->id)->with('success', 'Item updated successfully!');
