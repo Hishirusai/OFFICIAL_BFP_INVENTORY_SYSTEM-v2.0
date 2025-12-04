@@ -65,30 +65,33 @@
         </div>
     </div>
 
-    @if(isset($isSearchingItems) && $isSearchingItems)
-    <div class="mb-8 bg-gradient-to-r from-gray-600 to-gray-800 rounded-2xl shadow-lg p-6 text-white flex flex-col md:flex-row items-center justify-between border border-blue-900">
-        <div class="flex items-center mb-4 md:mb-0">
-            <div class="p-3 bg-white/20 rounded-full backdrop-blur-sm mr-4">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div class="bg-blue-600 rounded-2xl p-6 shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
+                <div class="relative z-10">
+                    <p class="text-xs font-bold tracking-widest uppercase opacity-80">Total Items</p>
+                    <h2 class="text-4xl font-extrabold mt-2" id="cardTotalQty">
+                        {{ number_format($totalMatchedQuantity) }}
+                    </h2>
+                </div>
+                <div class="absolute top-4 right-4 bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                </div>
             </div>
-            <div>
-                <h2 class="text-2xl font-bold">Search Results</h2>
-                <p class="text-white">Displaying total quantities for: <span class="font-extrabold text-white">"{{ $searchDisplay ?? request('item_search') }}"</span></p>
+
+            <div class="bg-gray-900 rounded-2xl p-6 shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
+                <div class="relative z-10">
+                    <p class="text-xs font-bold tracking-widest uppercase opacity-80">Total Value</p>
+                    <h2 class="text-4xl font-extrabold mt-2" id="cardTotalVal">
+                        ₱{{ number_format($totalMatchedCost, 2) }}
+                    </h2>
+                </div>
+                <div class="absolute top-4 right-4 bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                    <span class="font-bold text-xl">₱</span>
+                </div>
             </div>
         </div>
-        <div class="flex items-center gap-4">
-            <div class="text-center md:text-right bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10 min-w-[160px]">
-                <span class="block text-sm text-white uppercase font-bold tracking-wider">Total Quantity</span>
-                <span class="block text-4xl font-extrabold text-white">
-                    {{ number_format($totalMatchedQuantity ?? 0) }}
-                </span>
-            </div>
-            <a href="{{ route('stations.index') }}" class="bg-red-500 hover:bg-red-600 text-white p-4 rounded-xl shadow-lg transition flex items-center justify-center border border-red-600" title="Clear Search">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </a>
-        </div>
-    </div>
-    @endif
 
     @if(session('success'))
         <div id="successMessage" class="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 p-4 mb-8 shadow-sm rounded-r flex items-center justify-between transition-opacity duration-1000 ease-out">
@@ -107,8 +110,10 @@
             @endphp
 
             <div class="station-card relative rounded-2xl transition duration-300 group bg-white {{ $isMain ? $mainStyle : $subStyle }}"
-                 data-name="{{ strtolower($station->name) }}" 
-                 data-location="{{ strtolower($station->location ?? '') }}">
+                data-name="{{ strtolower($station->name) }}" 
+                data-location="{{ strtolower($station->location ?? '') }}"
+                data-qty="{{ $station->matched_quantity ?? 0 }}"
+                data-val="{{ $station->matched_cost ?? 0 }}">
                 
                 <a href="{{ route('stations.show', [
                     'station' => $station->id, 
@@ -215,13 +220,24 @@
         function openDeleteModal(id) { document.getElementById('deleteForm').action="/stations/"+id; openModal('deleteStationModal'); }
         function clearError(i) { i.classList.remove('border-red-500'); i.classList.add('border-gray-300'); if(i.nextElementSibling) i.nextElementSibling.style.display='none'; }
         
-        // Filter Stations (Client Side) & Clear Button Logic
+        // --- NEW HELPER FUNCTIONS FOR CARDS ---
+        function formatNumber(num) {
+            return num.toLocaleString('en-US');
+        }
+        function formatCurrency(num) {
+            return '₱' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // --- UPDATED FILTER FUNCTION ---
         function filterStations() {
             let input = document.getElementById('searchInput');
             let filter = input.value.toLowerCase();
             let clearBtn = document.getElementById('clearStationBtn');
             let cards = document.getElementsByClassName('station-card');
-            let visible = 0;
+            
+            let visibleCount = 0;
+            let currentTotalQty = 0;
+            let currentTotalVal = 0;
 
             // Toggle Clear Button Visibility
             if (filter.length > 0) {
@@ -231,10 +247,29 @@
             }
 
             for(let c of cards) {
-                if(c.dataset.name.includes(filter) || c.dataset.location.includes(filter)) { c.style.display=""; visible++; } 
-                else { c.style.display="none"; }
+                // Check visibility
+                if(c.dataset.name.includes(filter) || c.dataset.location.includes(filter)) { 
+                    c.style.display = ""; 
+                    visibleCount++;
+
+                    // ✅ SUM UP VISIBLE CARDS
+                    // We read the data-qty and data-val we added to the HTML
+                    currentTotalQty += parseFloat(c.dataset.qty) || 0;
+                    currentTotalVal += parseFloat(c.dataset.val) || 0;
+                } 
+                else { 
+                    c.style.display = "none"; 
+                }
             }
-            document.getElementById('noResultsMessage').classList.toggle('hidden', visible > 0);
+
+            // ✅ UPDATE THE TOP CARDS
+            const cardQtyElement = document.getElementById('cardTotalQty');
+            const cardValElement = document.getElementById('cardTotalVal');
+
+            if(cardQtyElement) cardQtyElement.innerText = formatNumber(currentTotalQty);
+            if(cardValElement) cardValElement.innerText = formatCurrency(currentTotalVal);
+
+            document.getElementById('noResultsMessage').classList.toggle('hidden', visibleCount === 0);
         }
 
         // Function to clear the client-side filter

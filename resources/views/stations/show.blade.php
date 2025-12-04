@@ -110,14 +110,12 @@
                 </div>
             </div>
 
-            <button class="bg-white text-gray-600 hover:text-gray-900 border border-gray-300 font-bold py-2 px-4 rounded-xl shadow-sm flex items-center transition-all">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                Print
-            </button>
-            <button class="bg-white text-gray-600 hover:text-gray-900 border border-gray-300 font-bold py-2 px-4 rounded-xl shadow-sm flex items-center transition-all">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <a href="{{ route('stations.export', ['station' => $station->id] + request()->query()) }}" class="bg-white text-gray-600 hover:text-gray-900 border border-gray-300 font-bold py-2 px-4 rounded-xl shadow-sm flex items-center transition-all">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
                 Export
-            </button>
+            </a>
             <button onclick="openModal('globalTransferModal')" class="bg-gradient-to-r from-blue-700 to-blue-900 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                 Transfer
@@ -127,6 +125,33 @@
                 Add Item
             </button>
         </div> 
+    </div>
+
+    {{-- STATS CARDS --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="bg-blue-600 rounded-2xl p-4 shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
+            <div class="relative z-10">
+                <p class="text-xs font-bold tracking-widest uppercase opacity-80">Total Items</p>
+                <h2 class="text-3xl font-extrabold mt-1">
+                    {{ number_format($totalQuantity ?? 0) }}
+                </h2>
+            </div>
+            <div class="absolute top-3 right-3 bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+            </div>
+        </div>
+
+        <div class="bg-gray-900 rounded-2xl p-4 shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
+            <div class="relative z-10">
+                <p class="text-xs font-bold tracking-widest uppercase opacity-80">Total Value</p>
+                <h2 class="text-3xl font-extrabold mt-1">
+                    ₱{{ number_format($totalValue ?? 0, 2) }}
+                </h2>
+            </div>
+            <div class="absolute top-3 right-3 bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                <span class="font-bold text-lg">₱</span>
+            </div>
+        </div>
     </div>
 
     <form id="searchForm" method="GET" action="{{ route('stations.show', $station->id) }}" class="flex flex-col md:flex-row gap-4 mb-6 items-center">
@@ -163,11 +188,12 @@
             <select name="unit" onchange="this.form.submit()" 
                     class="w-full rounded-xl border border-gray-500 bg-gray-50 text-gray-900 shadow-sm focus:border-blue-600 focus:ring-2 focus:ring-blue-600 py-3 font-medium cursor-pointer">
                 <option value="">All Units</option>
-                <option value="pieces" {{ request('unit') == 'pieces' ? 'selected' : '' }}>Pieces</option>
-                <option value="pairs" {{ request('unit') == 'pairs' ? 'selected' : '' }}>Pairs</option>
-                <option value="sets" {{ request('unit') == 'sets' ? 'selected' : '' }}>Sets</option>
-                <option value="rolls" {{ request('unit') == 'rolls' ? 'selected' : '' }}>Rolls</option>
                 <option value="box" {{ request('unit') == 'box' ? 'selected' : '' }}>Boxes</option>
+                <option value="pairs" {{ request('unit') == 'pairs' ? 'selected' : '' }}>Pairs</option>
+                <option value="pieces" {{ request('unit') == 'pieces' ? 'selected' : '' }}>Pieces</option>
+                <option value="rolls" {{ request('unit') == 'rolls' ? 'selected' : '' }}>Rolls</option>
+                <option value="sets" {{ request('unit') == 'sets' ? 'selected' : '' }}>Sets</option>
+                <option value="units" {{ request('unit') == 'units' ? 'selected' : '' }}>Units</option>
             </select>
         </div>
 
@@ -362,8 +388,20 @@
             </table>
         </div>
 
-        <div id="paginationContainer" class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-            {{ $items->links() }}
+        {{-- CORRECTED PAGINATION BLOCK FOR SHOW.BLADE.PHP --}}
+        <div id="paginationContainer" class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            {{-- Showing Results Text --}}
+            <div class="text-sm text-gray-500 font-medium">
+                Showing <span class="font-bold text-gray-900">{{ $items->firstItem() ?? 0 }}</span> 
+                to <span class="font-bold text-gray-900">{{ $items->lastItem() ?? 0 }}</span> 
+                of <span class="font-bold text-gray-900">{{ $items->total() }}</span> results
+            </div>
+
+            {{-- Use the custom pagination view --}}
+            <div>
+                {{ $items->links('partials.pagination') }}
+            </div>
         </div>
     </div>
 
@@ -423,11 +461,12 @@
                         <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Unit of Measure</label>
                         <div class="relative"> <select name="unit" class="w-full px-4 py-3 rounded-xl border border-gray-500 text-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition appearance-none cursor-pointer bg-white shadow-inner">
                                 <option value="" disabled selected>Select Unit</option>
-                                <option value="Pieces">Pieces</option>
                                 <option value="Boxes">Boxes</option>
-                                <option value="Rolls">Rolls</option>
                                 <option value="Pairs">Pairs</option>
+                                <option value="Pieces">Pieces</option>
+                                <option value="Rolls">Rolls</option>
                                 <option value="Sets">Sets</option>
+                                <option value="Units">Units</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
                                 <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
@@ -674,7 +713,7 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 uppercase mb-2">Quantity to transfer</label>
                     <div class="relative">
-                        <input type="number" name="quantity" id="singleTransferQtyInput" min="1" step="1" required 
+                        <input type="number" name="quantity" id="singleTransferQtyInput" min="0" step="1" required 
                             oninput="validateSingleQty(this)"
                             class="w-full px-4 py-3 rounded-xl border border-gray-400 shadow-sm bg-white text-lg font-bold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-gray-500" 
                             placeholder="Enter quantity...">
@@ -737,7 +776,7 @@
 
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-2 uppercase">Quantity</label>
-                        <input type="number" id="edit_qty" name="quantity" min="1" oninput="calculateEditTotal()"
+                        <input type="number" id="edit_qty" name="quantity" min="0" oninput="calculateEditTotal()"
                             class="w-full px-4 py-3 rounded-xl border border-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none bg-white shadow-inner" required>
                         @error('quantity') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
@@ -764,6 +803,7 @@
                             <option value="Rolls">Rolls</option>
                             <option value="Pairs">Pairs</option>
                             <option value="Sets">Sets</option>
+                            <option value="Units">Units</option>
                         </select>
                         @error('unit') <p class="text-red-500 text-xs italic mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
@@ -871,50 +911,40 @@
     <script>
         // --- GLOBAL ON LOAD ---
         document.addEventListener('DOMContentLoaded', function() {
-            
-            // 1. SETUP LIVE SERVER SEARCH (FETCH)
-            const liveInput = document.getElementById('liveSearchInput');
-            let searchTimeout = null;
+    
+        // 1. SETUP LIVE SERVER SEARCH (FETCH)
+        const liveInput = document.getElementById('liveSearchInput');
+        let searchTimeout = null;
 
-            if (liveInput) {
-                liveInput.addEventListener('input', function() {
-                    const query = this.value;
-                    // Get the current URL (e.g., stations/1)
-                    const currentUrl = "{{ route('stations.show', $station->id) }}";
+        if (liveInput) {
+            liveInput.addEventListener('input', function() {
+                const query = this.value;
+                const currentUrl = "{{ route('stations.show', $station->id) }}";
 
-                    // Clear previous timer (Debounce)
-                    clearTimeout(searchTimeout);
+                clearTimeout(searchTimeout);
 
-                    // Wait 400ms after typing stops, then fetch from server
-                    searchTimeout = setTimeout(() => {
-                        fetchResults(currentUrl, query);
-                    }, 400);
-                });
-            }
+                searchTimeout = setTimeout(() => {
+                    fetchResults(currentUrl, query);
+                }, 400);
+            });
+        }
 
-            // 2. CHECK ERRORS (For Add Item Modal)
-            @if($errors->addItem->any())
-                @if(
-                    $errors->addItem->has('name') ||
-                    $errors->addItem->has('product_code') ||
-                    $errors->addItem->has('quantity') ||
-                    $errors->addItem->has('unit_cost')
-                )
-                    <script>
-                        openModal('addItemModal');
-                    </script>
-                @endif
-            @endif
-            
-            // 3. AUTO-HIDE SUCCESS MESSAGE
-            const successMessage = document.getElementById('successMessage');
-            if (successMessage) {
-                setTimeout(function() {
-                    successMessage.classList.add('opacity-0');
-                    setTimeout(function() { successMessage.remove(); }, 1000);
-                }, 3000);
-            }
-        });
+        // 2. CHECK ERRORS & RE-OPEN MODAL (THE FIX)
+        // We check if ANY errors exist, AND if the hidden "form_type" input was "add_item".
+        // This ensures we open the right modal regardless of what you named your error bag.
+        @if($errors->any() && old('form_type') == 'add_item')
+            openModal('addItemModal');
+        @endif
+
+        // 3. AUTO-HIDE SUCCESS MESSAGE
+        const successMessage = document.getElementById('successMessage');
+        if (successMessage) {
+            setTimeout(function() {
+                successMessage.classList.add('opacity-0');
+                setTimeout(function() { successMessage.remove(); }, 1000);
+            }, 3000);
+        }
+    });
 
         // --- NEW: FETCH RESULTS FUNCTION ---
         function fetchResults(url, query) {
@@ -978,13 +1008,30 @@
 
         // --- CALCULATIONS (Edit Item) ---
         function calculateEditTotal() {
-            let qty = parseFloat(document.getElementById('edit_qty').value) || 0;
-            let cost = parseFloat(document.getElementById('edit_unit_cost').value) || 0;
-            let totalDisplay = document.getElementById('edit_total_cost_display');
+        let qtyInput = document.getElementById('edit_qty');
+        let qty = parseFloat(qtyInput.value) || 0;
+        let cost = parseFloat(document.getElementById('edit_unit_cost').value) || 0;
+        let totalDisplay = document.getElementById('edit_total_cost_display');
 
-            let total = qty * cost;
-            totalDisplay.value = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        // 1. Calculate Total
+        let total = qty * cost;
+        totalDisplay.value = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // 2. NEW: Visual Warning for Deletion
+        let submitBtn = document.querySelector('#editItemForm button[type="submit"]');
+        
+        if (qty === 0) {
+            // Change button to Red indicating deletion
+            submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            submitBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+            submitBtn.innerText = "Confirm Delete (Qty 0)";
+        } else {
+            // Revert to Blue
+            submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            submitBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+            submitBtn.innerText = "Update Item";
         }
+    }
 
         // --- EDIT MODAL TRIGGER ---
         // --- EDIT MODAL TRIGGER ---
@@ -1022,13 +1069,6 @@
             @if($errors->any())
                 const formType = "{{ old('form_type') }}";
                 if (formType === 'edit_item') {
-                    // Restore Text (Visual only)
-                    // Note: We use the old('item_id') to fetch the item again if needed, 
-                    // but usually just showing the modal is enough.
-                    // Ideally we should pass the code back from old input, but since we didn't submit it, 
-                    // we rely on the user cancelling or trying again.
-                    // For now, let's just re-open the modal.
-                    
                     const oldItemId = "{{ old('item_id') }}";
                     document.getElementById('edit_item_id_hidden').value = oldItemId;
                     

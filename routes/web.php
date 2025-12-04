@@ -59,4 +59,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/stations/{station}/notifications/clear', [App\Http\Controllers\StationController::class, 'clearNotifications'])->name('stations.notifications.clear');
     
     Route::get('/stations/{station}/export', [App\Http\Controllers\StationController::class, 'export'])->name('stations.export');
+
+    Route::get('/stations/{id}/export', [StationController::class, 'export'])->name('stations.export');
+
+    Route::get('/stations/{station}/items/archive', [ItemController::class, 'trash'])->name('items.trash');
+    Route::post('/stations/{station}/items/{item}/restore', [ItemController::class, 'restore'])->name('items.restore');
 });

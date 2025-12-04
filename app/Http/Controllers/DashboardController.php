@@ -31,69 +31,84 @@ class DashboardController extends Controller
         $totalValue    = (clone $query)->sum('total_cost');
 
         // 5. CHART DATA LOGIC -----------------------------------------
-        // so basically, prepare the data para sa chart
-        // A. Get available years using PHP (Database Agnostic)
-        // We fetch all dates, parse them in PHP to find unique years.
-        // This prevents SQL errors (like "no such function: MONTH")
+        
+        // A. Get available years
         $allDates = (clone $query)->pluck('date_acquired');
         
-        $availableYears = $allDates
+        // Step 1: Extract years from database items
+        $dbYears = $allDates
             ->map(function ($date) {
                 return $date ? Carbon::parse($date)->format('Y') : null;
             })
-            ->filter()
+            ->filter();
+
+        // ✅ FIX 1: Always add the Current System Year (e.g., 2026)
+        // This ensures the dropdown works even if no items exist for the new year yet.
+        $currentYear = date('Y');
+        $dbYears->push($currentYear);
+
+        // Step 2: Unique and Sort (Latest first)
+        $availableYears = $dbYears
             ->unique()
-            ->sortDesc() // Latest years first (2025, 2024...)
+            ->sortDesc()
             ->values();
 
-        // B. Determine which year to show, yung dropdown selected year or default there
-        // Ito mga conditions:
-        // If user selects a year, use it.
-        // If not, default to the most recent year available.
-        // If DB is empty, default to current year.
-        $defaultYear = $availableYears->first() ?? date('Y');
+        // B. Determine which year to show
+        // Use user selection, OR default to current system year if available
+        $defaultYear = $availableYears->contains($currentYear) ? $currentYear : $availableYears->first();
         $selectedYear = $request->input('year', $defaultYear);
 
         // Initialize arrays with 0 for all 12 months (Jan-Dec)
         $chartData = [
-            // Conditions
             'Serviceable'   => array_fill(0, 12, 0),
             'Unserviceable' => array_fill(0, 12, 0),
             'BER'           => array_fill(0, 12, 0),
-            
-            // Total Items and Value stuff
             'TotalItems'    => array_fill(0, 12, 0),
             'TotalValue'    => array_fill(0, 12, 0),
         ];
 
-        // Fetch items for the SELECTED year
-        // NOTE: I added 'total_cost' here so we can calculate the value graph
+        // ✅ FIX 3: CUMULATIVE LOGIC (Stock History)
+        // We calculate the end of the selected year (e.g., Dec 31, 2025)
+        $endOfSelectedYear = Carbon::create($selectedYear, 12, 31)->endOfDay();
+
+        // Fetch ALL items acquired on or before the end of this year
+        // (Items bought in previous years should still appear in Jan 1st of this year)
         $itemsForChart = (clone $query)
-            ->whereYear('date_acquired', $selectedYear)
+            ->whereDate('date_acquired', '<=', $endOfSelectedYear)
             ->get(['date_acquired', 'condition', 'quantity', 'total_cost']);
 
         foreach ($itemsForChart as $item) {
             if (!$item->date_acquired) continue;
 
-            // Parse date using Carbon to get month (1 = Jan, 12 = Dec)
-            $month = Carbon::parse($item->date_acquired)->month;
-            $monthIndex = $month - 1; // 0-indexed for array
+            $acquiredDate = Carbon::parse($item->date_acquired);
             
-            $condition = $item->condition;
-            $qty = (int) $item->quantity;
-            $cost = (float) $item->total_cost;
-
-            // Add quantity to the correct month/condition bucket
-            if (isset($chartData[$condition])) {
-                $chartData[$condition][$monthIndex] += $qty;
+            // Determine the "Start Month" index (0 = Jan, 11 = Dec)
+            // If bought in a previous year, it exists from January (Index 0).
+            // If bought in the selected year, it exists starting from its purchase month.
+            if ($acquiredDate->year < $selectedYear) {
+                $startIndex = 0; // Exists from Jan 1st
+            } else {
+                $startIndex = $acquiredDate->month - 1; // Exists from purchase month
             }
 
-            // Fill Total Items (Regardless of condition)
-            $chartData['TotalItems'][$monthIndex] += $qty;
+            $qty = (int) $item->quantity;
+            $cost = (float) $item->total_cost;
+            $condition = $item->condition;
 
-            // Fill Total Value
-            $chartData['TotalValue'][$monthIndex] += $cost;
+            // Loop from the Start Month to Dec (Index 11)
+            // This "carries over" the stock to subsequent months, creating the history effect
+            for ($i = $startIndex; $i < 12; $i++) {
+                if (isset($chartData[$condition])) {
+                    $chartData[$condition][$i] += $qty;
+                }
+                $chartData['TotalItems'][$i] += $qty;
+                $chartData['TotalValue'][$i] += $cost;
+            }
         }
+
+        // ✅ FIX 2: Added 'type' AND 'total_cost' to the select list
+        // 'total_cost' is needed for the new Value column in Item Summary
+        $allItems = (clone $query)->get(['name', 'type', 'quantity', 'total_cost']);
 
         // 6. Send data to the view
         return view('dashboard', compact(
@@ -105,7 +120,8 @@ class DashboardController extends Controller
             'totalValue',
             'chartData',
             'availableYears', 
-            'selectedYear'
+            'selectedYear',
+            'allItems'
         ));
     }
 }
