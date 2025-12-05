@@ -46,13 +46,20 @@ class ItemController extends Controller
 
         ActivityLog::create([
             'user_id'     => Auth::id(),
-            'action_type' => 'Item Added',
-            'details'     => "Added '{$item->name}' to {$station->name}.",
+            'action_type' => 'Item Created',
+            'details'     => "Created '{$item->name}' in {$station->name}.",
             'metadata'    => [
                 'item_id' => $item->id,
                 'station_id' => $station->id,
+                'name' => $item->name,
                 'product_code' => $item->product_code,
-                'quantity' => $item->quantity
+                'type' => $item->type,
+                'description' => $item->description,
+                'quantity' => $item->quantity,
+                'unit' => $item->unit,
+                'unit_cost' => $item->unit_cost,
+                'total_cost' => $item->total_cost,
+                'date_expiry' => $item->date_expiry
             ]
         ]);
 
@@ -98,6 +105,10 @@ class ItemController extends Controller
         }
 
         // 3. LOGIC: Normal Update (Quantity > 0)
+        $oldQuantity = $item->quantity;
+        $newQuantity = (int)$validated['quantity'];
+        $quantityChange = $newQuantity - $oldQuantity;
+        
         $totalCost = $validated['quantity'] * $validated['unit_cost'];
         $condition = (new Carbon($validated['date_expiry']))->isPast() ? 'Unserviceable' : 'Serviceable';
 
@@ -114,15 +125,65 @@ class ItemController extends Controller
             'condition'     => $condition,
         ]);
 
-        ActivityLog::create([
-            'user_id'     => Auth::id(),
-            'action_type' => 'Item Updated',
-            'details'     => "Updated details for '{$item->name}' in {$station->name}.",
-            'metadata'    => [
-                'item_id' => $item->id,
-                'changes' => $item->getChanges()
-            ]
-        ]);
+        // 4. LOGIC: Determine action type based on quantity change
+        if ($quantityChange > 0) {
+            // Quantity increased -> Stock Added
+            $costAdded = $quantityChange * $validated['unit_cost'];
+            ActivityLog::create([
+                'user_id'     => Auth::id(),
+                'action_type' => 'Stock Added',
+                'details'     => "Added {$quantityChange} {$validated['unit']} of '{$item->name}' in {$station->name}.",
+                'metadata'    => [
+                    'item_id' => $item->id,
+                    'station_id' => $station->id,
+                    'name' => $item->name,
+                    'product_code' => $item->product_code,
+                    'type' => $item->type,
+                    'description' => $item->description,
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'unit_cost' => $item->unit_cost,
+                    'total_cost' => $item->total_cost,
+                    'date_expiry' => $item->date_expiry,
+                    'total_cost_after' => $item->total_cost,
+                    'cost_added' => $costAdded
+                ]
+            ]);
+        } elseif ($quantityChange < 0) {
+            // Quantity decreased -> Stock Deducted
+            $costDeducted = abs($quantityChange) * $validated['unit_cost'];
+            ActivityLog::create([
+                'user_id'     => Auth::id(),
+                'action_type' => 'Stock Deducted',
+                'details'     => "Deducted " . abs($quantityChange) . " {$validated['unit']} of '{$item->name}' from {$station->name}.",
+                'metadata'    => [
+                    'item_id' => $item->id,
+                    'station_id' => $station->id,
+                    'name' => $item->name,
+                    'product_code' => $item->product_code,
+                    'type' => $item->type,
+                    'description' => $item->description,
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'unit_cost' => $item->unit_cost,
+                    'total_cost' => $item->total_cost,
+                    'date_expiry' => $item->date_expiry,
+                    'total_cost_after' => $item->total_cost,
+                    'cost_deducted' => $costDeducted
+                ]
+            ]);
+        } else {
+            // Quantity unchanged -> Item Updated (only if other fields changed)
+            ActivityLog::create([
+                'user_id'     => Auth::id(),
+                'action_type' => 'Item Updated',
+                'details'     => "Updated details for '{$item->name}' in {$station->name}.",
+                'metadata'    => [
+                    'item_id' => $item->id,
+                    'changes' => $item->getChanges()
+                ]
+            ]);
+        }
 
         return redirect()->route('stations.show', $station->id)->with('success', 'Item updated successfully!');
     }

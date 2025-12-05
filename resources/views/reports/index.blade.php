@@ -173,6 +173,12 @@
                     </div>
                 </div>
 
+                {{-- Log Message --}}
+                <div class="bg-white p-4 rounded-xl border border-gray-200 mb-4 md:mb-6">
+                    <p class="text-xs font-bold text-gray-400 uppercase mb-1">Log Message</p>
+                    <p id="modal_details" class="text-sm font-medium text-gray-800">--</p>
+                </div>
+
                 {{-- Transfer Stations --}}
                 <div id="transfer_stations_container" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6 hidden">
                     <div class="p-4 md:p-6">
@@ -332,11 +338,6 @@
                     </div>
                 </div>
 
-                {{-- Log Message --}}
-                <div class="bg-white p-4 rounded-xl border border-gray-200 mb-4">
-                    <p class="text-xs font-bold text-gray-400 uppercase mb-1">Log Message</p>
-                    <p id="modal_details" class="text-sm font-medium text-gray-800">--</p>
-                </div>
                 <div id="notes_container" class="bg-yellow-50 rounded-xl border border-yellow-100 p-4 hidden">
                      <p class="text-xs font-bold text-yellow-600 uppercase mb-1">Notes / Remarks</p>
                      <p id="modal_notes" class="text-sm text-yellow-800 italic">--</p>

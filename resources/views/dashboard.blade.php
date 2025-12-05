@@ -629,11 +629,12 @@
                     } 
                     
                     // --- Get the expected normalized filter string/key ---
+                    // IMPORTANT: Check 'unserviceable' FIRST because it contains 'serviceable' as a substring!
                     let expectedFilterKey = '';
-                    if (currentFilterKey.includes('serviceable')) {
-                        expectedFilterKey = 'serviceable';
-                    } else if (currentFilterKey.includes('unserviceable')) {
+                    if (currentFilterKey.includes('unserviceable')) {
                         expectedFilterKey = 'unserviceable';
+                    } else if (currentFilterKey.includes('serviceable')) {
+                        expectedFilterKey = 'serviceable';
                     } else if (currentFilterKey.includes('ber')) {
                         expectedFilterKey = 'ber';
                     } else {

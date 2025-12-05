@@ -106,9 +106,10 @@ class DashboardController extends Controller
             }
         }
 
-        // ✅ FIX 2: Added 'type' AND 'total_cost' to the select list
+        // ✅ FIX 2: Added 'type', 'total_cost', and 'condition' to the select list
         // 'total_cost' is needed for the new Value column in Item Summary
-        $allItems = (clone $query)->get(['name', 'type', 'quantity', 'total_cost']);
+        // 'condition' is needed for filtering by Serviceable/Unserviceable/BER
+        $allItems = (clone $query)->get(['name', 'type', 'quantity', 'total_cost', 'condition']);
 
         // 6. Send data to the view
         return view('dashboard', compact(
