@@ -102,7 +102,6 @@ class ItemController extends Controller
         $condition = (new Carbon($validated['date_expiry']))->isPast() ? 'Unserviceable' : 'Serviceable';
 
         $item->update([
-            'product_code'  => $validated['product_code'],
             'name'          => $validated['name'],
             'type'          => $validated['type'],
             'quantity'      => $validated['quantity'],
