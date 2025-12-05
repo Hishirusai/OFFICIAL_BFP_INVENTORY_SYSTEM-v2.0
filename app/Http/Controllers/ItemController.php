@@ -79,6 +79,7 @@ class ItemController extends Controller
             'date_acquired' => 'required|date|before_or_equal:9999-12-31',
             'date_expiry'   => 'required|date|before_or_equal:9999-12-31',
             'description'   => 'nullable|string',
+            'condition'     => 'required|string|in:Serviceable,Unserviceable,BER',
         ]);
 
         // 2. LOGIC: If Quantity is 0 -> HARD DELETE
@@ -110,7 +111,6 @@ class ItemController extends Controller
         $quantityChange = $newQuantity - $oldQuantity;
         
         $totalCost = $validated['quantity'] * $validated['unit_cost'];
-        $condition = (new Carbon($validated['date_expiry']))->isPast() ? 'Unserviceable' : 'Serviceable';
 
         $item->update([
             'name'          => $validated['name'],
@@ -122,7 +122,7 @@ class ItemController extends Controller
             'date_acquired' => $validated['date_acquired'],
             'date_expiry'   => $validated['date_expiry'],
             'description'   => $validated['description'],
-            'condition'     => $condition,
+            'condition'     => $validated['condition'],
         ]);
 
         // 4. LOGIC: Determine action type based on quantity change

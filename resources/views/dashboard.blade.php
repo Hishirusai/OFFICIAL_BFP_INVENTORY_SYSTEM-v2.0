@@ -518,7 +518,7 @@
         let currentCondition = 'ALL'; // New state variable for condition
 
         const targets = {
-            'PPE': ['HOOD', 'FIRE COAT', 'FIRE HELMET', 'FIRE TROUSERS', 'GLOVES', 'BOOTS', 'SCBA'],
+            'PPE': ['HOOD', 'COAT', 'HELMET', 'TROUSERS', 'GLOVES', 'BOOTS', 'SCBA'],
             'FFE': ['HOSE 1 1/2', 'HOSE 2 1/2', 'NOZZLE 1 1/2', 'NOZZLE 2 1/2']
         };
 
