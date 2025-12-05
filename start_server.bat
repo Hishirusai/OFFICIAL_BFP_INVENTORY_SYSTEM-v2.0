@@ -1,31 +1,31 @@
 @echo off
-echo Starting Laravel Development Server...
-echo.
+:: Ensure the script runs from the folder where it is located
+cd /d "%~dp0"
 
-REM Start PHP Artisan Serve in a new window
-start "Laravel Server" cmd /k "php artisan serve"
+echo Clearing previous login sessions...
 
-REM Wait a moment for Laravel to start
+:: 1. Clear Laravel Session ONLY (Forces Logout)
+:: This removes active session files to log the user out before starting.
+:: We use a loop to delete files in storage/framework/sessions except .gitignore
+if exist "storage\framework\sessions" (
+    pushd "storage\framework\sessions"
+    for %%F in (*) do (
+        :: /F = force delete, /Q = quiet mode
+        if /I not "%%~nxF"==".gitignore" del /F /Q "%%F"
+    )
+    popd
+)
+
+echo Starting Server...
+
+:: 2. Start Laravel (php artisan serve) in a named window
+start "LaravelAppServer" cmd /k "php artisan serve"
+
+:: 3. Start Vite (npm run dev) in a named window
+start "LaravelAppVite" cmd /k "npm run dev"
+
+:: 4. Wait 2 seconds for services to load
 timeout /t 2 /nobreak >nul
 
-REM Start NPM Dev Server in a new window
-echo Starting Vite Development Server...
-start "Vite Server" cmd /k "npm run dev"
-
-REM Wait a few seconds for both servers to be ready
-echo.
-echo Waiting for servers to start...
-timeout /t 5 /nobreak >nul
-
-REM Open Chrome to the Laravel application
-echo Opening Chrome...
-start chrome http://localhost:8000
-
-echo.
-echo Development servers are running!
-echo Laravel: http://localhost:8000
-echo Vite: http://localhost:5173 (or check the Vite window)
-echo.
-echo Press any key to exit this window (servers will continue running)...
-pause >nul
-
+:: 5. Open the browser
+start http://localhost:8000
