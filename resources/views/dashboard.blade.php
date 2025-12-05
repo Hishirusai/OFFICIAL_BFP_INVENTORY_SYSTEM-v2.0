@@ -200,25 +200,53 @@
         {{-- RIGHT COLUMN: ITEM SUMMARY --}}
         {{-- DESIGN RESTORED: White BG, Strong Shadow, Colored Top Border --}}
         <div class="bg-white p-6 md:p-8 rounded-2xl shadow-2xl border border-gray-300 border-t-8 border-t-blue-900 h-full flex flex-col">
-            <div class="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+            
+            {{-- HEADER ROW: Title (Left) and Buttons (Right) --}}
+            <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-4">
+                
+                {{-- Title and Subtitle (Left) --}}
                 <div>
                     <h4 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                         Item Summary
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                     </h4>
-                    <p class="text-sm text-gray-500 mt-1">Detailed Breakdown</p>
+                    <p class="text-sm text-gray-500 mt-1">Detailed Breakdown by Condition and Category</p>
                 </div>
-                
-                {{-- P.P.E. / F.F.E. Toggle --}}
-                <div class="flex bg-gray-100 p-1 rounded-lg">
-                    <button onclick="updateSummary('PPE')" id="btn-summary-ppe" 
-                            class="px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all">
-                        P.P.E.
-                    </button>
-                    <button onclick="updateSummary('FFE')" id="btn-summary-ffe" 
-                            class="px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all">
-                        F.F.E.
-                    </button>
+
+                {{-- FILTER BUTTONS CONTAINER (Top Right) --}}
+                <div class="flex flex-col items-end gap-2">
+                    
+                    {{-- NEW: Condition Filter Buttons (Now Placed first/on top) --}}
+                    <div class="flex bg-gray-100 p-1 rounded-lg self-end">
+                        <button onclick="setConditionFilter('ALL')" id="btn-condition-ALL" 
+                                class="px-4 py-1.5 text-xs font-bold rounded-md shadow-sm bg-white text-gray-800 transition-all">
+                            ALL
+                        </button>
+                        <button onclick="setConditionFilter('Serviceable')" id="btn-condition-Serviceable" 
+                                class="px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all">
+                            SERVICEABLE
+                        </button>
+                        <button onclick="setConditionFilter('Unserviceable')" id="btn-condition-Unserviceable" 
+                                class="px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all">
+                            UNSERVICEABLE
+                        </button>
+                        <button onclick="setConditionFilter('BER')" id="btn-condition-BER" 
+                                class="px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all">
+                            B.E.R.
+                        </button>
+                    </div>
+
+                    {{-- P.P.E. / F.F.E. Toggle (Now Placed second/on bottom and right-aligned) --}}
+                    <div class="flex bg-gray-100 p-1 rounded-lg self-end">
+                        <button onclick="setCategoryFilter('PPE')" id="btn-summary-PPE" 
+                                class="px-4 py-1.5 text-xs font-bold rounded-md shadow-sm bg-white text-gray-800 transition-all">
+                            P.P.E.
+                        </button>
+                        <button onclick="setCategoryFilter('FFE')" id="btn-summary-FFE" 
+                                class="px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all">
+                            F.F.E.
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -232,11 +260,11 @@
             {{-- Footer Total --}}
             <div class="mt-4 pt-4 border-t border-gray-100 bg-gray-50 p-4 rounded-xl space-y-2">
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-gray-500 uppercase">Total Items</span>
+                    <span class="text-xs font-bold text-gray-500 uppercase">Total Items (Filtered)</span>
                     <span id="category-total" class="text-lg font-extrabold text-blue-700">0</span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-gray-500 uppercase">Total Value</span>
+                    <span class="text-xs font-bold text-gray-500 uppercase">Total Value (Filtered)</span>
                     <span id="category-total-value" class="text-lg font-extrabold text-emerald-700">₱0.00</span>
                 </div>
             </div>
@@ -247,7 +275,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // ==========================================
-        // 1. CHART LOGIC
+        // 1. CHART LOGIC (Unchanged)
         // ==========================================
         const rawData = @json($chartData);
         let currentChartType = 'bar'; // Default
@@ -481,41 +509,93 @@
             window.myChart.updateOptions(newOptions);
         }
         
+        // ==========================================
+        // 2. ITEM SUMMARY LOGIC (Updated)
+        // ==========================================
+
         const allInventoryItems = @json($allItems ?? []); 
+        let currentCategory = 'PPE'; // New state variable for category
+        let currentCondition = 'ALL'; // New state variable for condition
 
         const targets = {
             'PPE': ['HOOD', 'FIRE COAT', 'FIRE HELMET', 'FIRE TROUSERS', 'GLOVES', 'BOOTS', 'SCBA'],
             'FFE': ['HOSE 1 1/2', 'HOSE 2 1/2', 'NOZZLE 1 1/2', 'NOZZLE 2 1/2']
         };
 
-        window.updateSummary = function(category) {
-            const btnPPE = document.getElementById('btn-summary-ppe');
-            const btnFFE = document.getElementById('btn-summary-ffe');
+        // Define the exact list of normalized DB strings for each filter key
+        const dbConditionMap = {
+            'serviceable': ['serviceable'],
+            'unserviceable': ['unserviceable'],
+            'ber': ['ber'], // Assumes the item controller saves 'BER' which normalizes to 'ber'
+        };
+        // NOTE: The PHP controller (ItemController) only saves 'Serviceable' or 'Unserviceable' based on expiry, or 'BER' is handled by the user/system. We'll use these core terms.
+
+        // Function to update the active state of the condition buttons (Updated styling logic)
+        const updateConditionButtons = () => {
+            const conditions = ['ALL', 'Serviceable', 'Unserviceable', 'BER'];
+            const activeClass = "px-4 py-1.5 text-xs font-bold rounded-md shadow-sm bg-white text-gray-800 transition-all";
+            const inactiveClass = "px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all";
+            
+            conditions.forEach(condition => {
+                const btn = document.getElementById(`btn-condition-${condition}`);
+                if (!btn) return;
+                
+                if (condition === currentCondition) {
+                    btn.className = activeClass;
+                } else {
+                    btn.className = inactiveClass;
+                }
+            });
+        };
+
+        // Function to update the active state of the category buttons (Unchanged)
+        const updateCategoryButtons = () => {
+            const categories = ['PPE', 'FFE'];
             const activeClass = "px-4 py-1.5 text-xs font-bold rounded-md shadow-sm bg-white text-gray-800 transition-all";
             const inactiveClass = "px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all";
 
-            if (category === 'PPE') {
-                btnPPE.className = activeClass;
-                btnFFE.className = inactiveClass;
-            } else {
-                btnPPE.className = inactiveClass;
-                btnFFE.className = activeClass;
-            }
+            categories.forEach(category => {
+                const btn = document.getElementById(`btn-summary-${category}`);
+                if (!btn) return;
 
+                if (category === currentCategory) {
+                    btn.className = activeClass;
+                } else {
+                    btn.className = inactiveClass;
+                }
+            });
+        };
+
+        window.setConditionFilter = function(condition) {
+            currentCondition = condition;
+            updateConditionButtons();
+            updateSummary();
+        };
+
+        window.setCategoryFilter = function(category) {
+            currentCategory = category;
+            updateCategoryButtons();
+            updateSummary();
+        };
+
+        // Consolidated updateSummary function - Logic modified to always render rows
+        window.updateSummary = function() {
             const listContainer = document.getElementById('summary-list');
             listContainer.innerHTML = ''; 
             let grandTotalQty = 0;
             let grandTotalValue = 0;
+            let hasContent = false;
 
-            const categoryTargets = targets[category];
+            const categoryTargets = targets[currentCategory];
 
             categoryTargets.forEach(targetName => {
                 
-                // Filtering
-                const matches = allInventoryItems.filter(item => {
+                // 1. FILTER BY ITEM NAME/CATEGORY (PRIMARY CHECK)
+                const categoryMatches = allInventoryItems.filter(item => {
                     if (!item.name) return false;
 
-                    if (category === 'FFE') {
+                    // FFE Type/Size matching logic (This part is robust as verified by item name searches working)
+                    if (currentCategory === 'FFE') {
                         let requiredName = '';
                         let requiredType = '';
 
@@ -530,8 +610,49 @@
                         const reqTypeClean = requiredType.replace(/\s+/g, '');
                         return nameMatches && dbTypeClean.includes(reqTypeClean);
                     } else {
+                        // PPE simple name matching (This part is robust)
                         return item.name.toLowerCase().includes(targetName.toLowerCase());
                     }
+                });
+
+                // 2. FILTER BY CONDITION (SECONDARY CHECK - THE DEFINITIVE FIX)
+                const matches = categoryMatches.filter(item => {
+                    
+                    // Normalize the item's condition string: lowercase and trim.
+                    // This is the clean, official database value.
+                    const itemConditionNormalized = (item.condition || '').toLowerCase().trim();
+                    
+                    let currentFilterKey = currentCondition.toLowerCase();
+                    
+                    if (currentFilterKey === 'all') {
+                        return true;
+                    } 
+                    
+                    // --- Get the expected normalized filter string/key ---
+                    let expectedFilterKey = '';
+                    if (currentFilterKey.includes('serviceable')) {
+                        expectedFilterKey = 'serviceable';
+                    } else if (currentFilterKey.includes('unserviceable')) {
+                        expectedFilterKey = 'unserviceable';
+                    } else if (currentFilterKey.includes('ber')) {
+                        expectedFilterKey = 'ber';
+                    } else {
+                        return false; // Should not happen
+                    }
+                    
+                    // --- Check for exact match against acceptable normalized DB strings ---
+
+                    // Check for BER (BER or B.E.R. in DB, both normalize to 'ber' after cleaning non-alpha chars)
+                    if (expectedFilterKey === 'ber') {
+                         // The actual DB string might be "B.E.R." or "BER". Normalize both item and expected values simply.
+                         // Using .replace(/[^a-z]/g, '') is the safest for BER/B.E.R.
+                         const itemConditionCleaned = itemConditionNormalized.replace(/[^a-z]/g, '');
+                         return itemConditionCleaned === 'ber';
+                    }
+
+                    // Check for Serviceable/Unserviceable (Assume the DB stores "serviceable" or "unserviceable")
+                    // Use equality here, because these are predetermined conditions.
+                    return itemConditionNormalized === expectedFilterKey;
                 });
 
                 // Calculate Row Totals
@@ -541,9 +662,15 @@
                 grandTotalQty += totalQty;
                 grandTotalValue += totalVal;
 
-                // RESTORED: 3-Column Grid Layout (Name, Value, Qty) with appropriate sizing
+                // --- MODIFIED LOGIC: Always render the row ---
+                // The row must always be created, even if totalQty is 0
+                hasContent = true; // Mark as having content if we iterate over targets
+
                 const li = document.createElement('li');
                 li.className = "grid grid-cols-12 gap-2 items-center p-3 pl-4 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100/50";
+                
+                // Determine text color based on quantity
+                const qtyTextColor = totalQty > 0 ? 'text-gray-800' : 'text-gray-400';
                 
                 li.innerHTML = `
                     <div class="col-span-5 flex flex-col">
@@ -559,7 +686,7 @@
                     </div>
 
                     <div class="col-span-3 text-right">
-                        <span class="block text-base font-extrabold text-gray-800">
+                        <span class="block text-base font-extrabold ${qtyTextColor}">
                             ${totalQty.toLocaleString()}
                         </span>
                         <span class="text-[11px] text-gray-600 uppercase font-bold tracking-wide mt-1 block">Qty</span>
@@ -568,11 +695,24 @@
                 listContainer.appendChild(li);
             });
 
+            // If there were no targets (which shouldn't happen with the hardcoded lists), show message.
+            if (!hasContent) {
+                 listContainer.innerHTML = `
+                    <div class="p-6 text-center text-gray-500 bg-gray-50 rounded-xl border-dashed border-2 border-gray-200">
+                        <p class="font-semibold">No item types defined for the '${currentCategory}' category.</p>
+                        <p class="text-sm">Please check the configuration.</p>
+                    </div>
+                 `;
+            }
+
             document.getElementById('category-total').innerText = grandTotalQty.toLocaleString();
             document.getElementById('category-total-value').innerText = "₱" + grandTotalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         };
         
-        updateSummary('PPE');
+        // Initialize the summary list on load
+        updateCategoryButtons();
+        updateConditionButtons();
+        updateSummary();
     });
 </script>
 @endsection
