@@ -7,6 +7,7 @@ use App\Models\Station;
 use App\Models\Item;
 use App\Models\ActivityLog; 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -185,8 +186,14 @@ class StationController extends Controller
     {
         $notification = \Illuminate\Notifications\DatabaseNotification::find($id);
         
-        if($notification) {
-            $notification->markAsRead();
+        if($notification && Auth::check()) {
+            // Mark as read for the current user only (not globally)
+            DB::table('notification_reads')->insertOrIgnore([
+                'user_id' => Auth::id(),
+                'notification_id' => $notification->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
         return response()->json(['success' => true]);

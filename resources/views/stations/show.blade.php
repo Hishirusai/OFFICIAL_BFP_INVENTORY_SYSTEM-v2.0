@@ -68,8 +68,8 @@
             <div class="relative z-50">
                 <button onclick="toggleNotificationDropdown()" class="bg-white text-gray-600 hover:text-blue-600 border border-gray-300 font-bold p-2.5 rounded-xl shadow-sm transition-all relative">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                    <span id="notif-badge" class="{{ $station->unreadNotifications->count() > 0 ? '' : 'hidden' }} absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-md animate-pulse">
-                        {{ $station->unreadNotifications->count() }}
+                    <span id="notif-badge" class="{{ $station->getUnreadNotificationsForUser(Auth::id())->count() > 0 ? '' : 'hidden' }} absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-md animate-pulse">
+                        {{ $station->getUnreadNotificationsForUser(Auth::id())->count() }}
                     </span>
                 </button>
 
@@ -86,9 +86,12 @@
                     </div>
                     <div class="max-h-[400px] overflow-y-auto relative z-20">
                         @forelse($station->notifications as $notification)
+                            @php
+                                $isReadByUser = $station->hasUserReadNotification(Auth::id(), $notification->id);
+                            @endphp
                             <div id="notif-item-{{ $notification->id }}" 
                                 class="group p-5 border-b border-gray-100 cursor-pointer transition duration-200 
-                                {{ $notification->read_at ? 'bg-white opacity-60 hover:opacity-100' : 'bg-blue-50/50 border-l-4 border-blue-500' }} hover:bg-gray-50"
+                                {{ $isReadByUser ? 'bg-white opacity-60 hover:opacity-100' : 'bg-blue-50/50 border-l-4 border-blue-500' }} hover:bg-gray-50"
                                 onclick="openReceiptModal('{{ $notification->id }}', {{ json_encode($notification->data) }})">
                                 <div class="flex justify-between items-start mb-1">
                                     <p class="font-extrabold text-gray-800 text-sm group-hover:text-blue-600 transition">{{ $notification->data['title'] }}</p>
