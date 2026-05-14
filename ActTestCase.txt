@@ -1,0 +1,521 @@
+================================================================================
+BFP INVENTORY SYSTEM — MANUAL UNIT TEST CASE REGISTER (ActTestCase)
+Template basis: Manual Testing Test Case — Unit Testing (MT_UT_*)
+================================================================================
+
+HOW MANY MODULES TO TEST
+------------------------
+You should plan **8 unit-level modules** for this Laravel BFP Inventory System.
+Each module below gets its own Test Case ID (MT_UT_001 … MT_UT_008). Add more IDs
+only if you split a module (e.g. separate “Export” from “Notifications”) or add
+new features.
+
+MODULE SUMMARY TABLE (fill names/dates when you execute)
+--------------------------------------------------------------------------------
+| # | Module / unit under test              | Test Case ID | Suggested priority |
+|---|----------------------------------------|--------------|---------------------|
+| 1 | Authentication (login, logout, guest)  | MT_UT_001    | High                |
+| 2 | User management (CRUD users)           | MT_UT_002    | High                |
+| 3 | Station management (CRUD stations)     | MT_UT_003    | High                |
+| 4 | Item / inventory (per station)         | MT_UT_004    | High                |
+| 5 | Transfer / movement between stations   | MT_UT_005    | High                |
+| 6 | Dashboard (aggregates / landing)       | MT_UT_006    | Medium              |
+| 7 | Reports                                | MT_UT_007    | Medium              |
+| 8 | Notifications, activity, export        | MT_UT_008    | Medium              |
+--------------------------------------------------------------------------------
+
+Pass / Fail / Not executed / Suspended (apply on every step and overall):
+  Pass     — Expected Results match Actual Results.
+  Failed   — Expected Results do not match Actual Results.
+  Not executed / Suspended — Prerequisites missing, offline, data unavailable,
+                            or blocked by another unit/module.
+
+================================================================================
+FULL SAMPLE — MODULE 4: ITEM / INVENTORY (use as reference for other modules)
+================================================================================
+
+MANUAL TESTING TEST CASE: UNIT TESTING
+
+Test Case ID:              MT_UT_004
+Test Case Description:     Verify item create, update, delete, archive/restore
+                           behave correctly for a single station (inventory unit).
+Created By:                [Name of Creator]
+Reviewed By:               [Name of Reviewer]
+Version:                   [Version #]
+Priority:                  High
+Tester's Name:             [Name of Tester]
+Date Tested:               [MM/DD/YY]
+Test Case (Pass/Fail/Not Executed):  [ ]
+
+--- Preparation ---
+
+Prerequisites:
+  1. Application running (e.g. php artisan serve) and reachable in browser.
+  2. SQLite/database migrated; seed or manual data includes at least one valid user.
+  3. Tester logged in with a role that can manage stations and items.
+  4. At least one Station exists and is selected/open for item operations.
+  5. Browser devtools optional (for network errors).
+
+Test Data:
+  - Positive: valid item name, quantity, unit (if applicable), station context.
+  - Negative: empty name, invalid quantity (non-numeric / negative if rejected),
+              wrong station URL or item id in route.
+  - Mixed: update only some fields; delete item that is referenced elsewhere (if any).
+
+--- Execution ---
+
+Test Scenario:
+  As an authenticated user, add a new item to a station, edit it, soft-delete or
+  move to trash per UI, then restore if applicable; confirm DB/UI reflect each action.
+
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| Step | Step Details                             | Expected Results                         | Actual Results                           | Pass/Fail/...    |
+| #    |                                          |                                          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 1    | Open station detail; submit new item     | Item appears in list; success feedback   | [Record what you observed]               | [ ]              |
+|      | with valid name and quantity.            | (or redirect) with correct values.       |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 2    | Edit the same item; change quantity      | List/DB shows updated quantity; no       | [Record what you observed]               | [ ]              |
+|      | (and name if applicable); save.            | duplicate row; validation passes.        |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 3    | Delete item or use archive/trash flow    | Item removed from active list or moved   | [Record what you observed]               | [ ]              |
+|      | per application.                         | to trash; consistent with design.        |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 4    | If restore exists: restore item from     | Item returns to active inventory with    | [Record what you observed]               | [ ]              |
+|      | trash/archive.                           | prior or default fields as designed.     |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+
+================================================================================
+EXPANDED TEMPLATES — REMAINING MODULES (same structure as MT_UT_004)
+================================================================================
+
+================================================================================
+MT_UT_001 — AUTHENTICATION (login, guest guard, logout)
+================================================================================
+
+MANUAL TESTING TEST CASE: UNIT TESTING
+
+Test Case ID:              MT_UT_001
+Test Case Description:     Verify login validates credentials, session is created
+                           for valid users, protected routes reject guests, and
+                           logout invalidates the session.
+Created By:                [Name of Creator]
+Reviewed By:               [Name of Reviewer]
+Version:                   [Version #]
+Priority:                  High
+Tester's Name:             [Name of Tester]
+Date Tested:               [MM/DD/YY]
+Test Case (Pass/Fail/Not Executed):  [ ]
+
+--- Preparation ---
+
+Prerequisites:
+  1. Application running and reachable (e.g. http://127.0.0.1:8000).
+  2. Database migrated; at least one user exists with known email/username and password.
+  3. Browser allows cookies / session storage (default for local testing).
+  4. Tester starts from logged-out state (clear site cookies or use private window).
+  5. Optional: second browser profile to confirm session isolation between users.
+
+Test Data:
+  - Positive: correct identifier + password for an existing active user.
+  - Negative: wrong password; unknown email; empty email field; empty password;
+              SQL-injection-style strings in fields (app should reject safely).
+  - Mixed: correct user after one failed attempt (ensure lockout message only if implemented).
+
+--- Execution ---
+
+Test Scenario:
+  Exercise the full authentication unit: guests see login and cannot open
+  /dashboard or /users; valid credentials reach the dashboard; logout returns
+  to guest state and protected URLs redirect or deny access.
+
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| Step | Step Details                             | Expected Results                         | Actual Results                           | Pass/Fail/...    |
+| #    |                                          |                                          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 1    | While logged out, open /login. Enter     | Clear validation or generic error; user | [Record what you observed]               | [ ]              |
+|      | a known email but wrong password; submit.| remains on login; no dashboard access.   |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 2    | Submit login with empty required fields  | Required-field messages (or equivalent);| [Record what you observed]               | [ ]              |
+|      | (leave password blank).                  | no session created.                      |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 3    | Manually browse to /dashboard (or        | Redirect to login or 403/302 to login    | [Record what you observed]               | [ ]              |
+|      | /users) without logging in.              | route; no protected content shown.       |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 4    | Submit login with valid credentials.     | Redirect to dashboard (or home); navbar  | [Record what you observed]               | [ ]              |
+|      |                                          | shows authenticated state; refresh     |                                          |                  |
+|      |                                          | keeps session.                           |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 5    | Use Logout; then try /dashboard again.   | Back to guest; /dashboard redirects to   | [Record what you observed]               | [ ]              |
+|      |                                          | login; no leftover sensitive data in UI. |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+
+================================================================================
+MT_UT_002 — USER MANAGEMENT (list, create, update, delete)
+================================================================================
+
+MANUAL TESTING TEST CASE: UNIT TESTING
+
+Test Case ID:              MT_UT_002
+Test Case Description:     Verify user administration: index loads, new users
+                           persist, updates apply, and delete removes or
+                           deactivates per application rules.
+Created By:                [Name of Creator]
+Reviewed By:               [Name of Reviewer]
+Version:                   [Version #]
+Priority:                  High
+Tester's Name:             [Name of Tester]
+Date Tested:               [MM/DD/YY]
+Test Case (Pass/Fail/Not Executed):  [ ]
+
+--- Preparation ---
+
+Prerequisites:
+  1. Logged in as a user allowed to access /users (admin or equivalent).
+  2. Database writable; backup optional before destructive steps.
+  3. Know one “safe” test email not already used (e.g. test.user+001@local.test).
+  4. Optional: database browser or tinker to verify users table after steps.
+  5. If the app prevents deleting the last admin, note that rule before testing delete.
+
+Test Data:
+  - Positive: unique name, email, password meeting minimum rules; optional role if UI has it.
+  - Negative: duplicate email; malformed email; password too short; empty name.
+  - Mixed: update only display name; change password optional flow if present.
+
+--- Execution ---
+
+Test Scenario:
+  Walk through user CRUD from the users screen: list accuracy, create with
+  validation, edit an existing row, and delete (or disable) while confirming
+  list and database alignment.
+
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| Step | Step Details                             | Expected Results                         | Actual Results                           | Pass/Fail/...    |
+| #    |                                          |                                          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 1    | Navigate to /users.                      | Page loads without server error; table  | [Record what you observed]               | [ ]              |
+|      |                                          | or cards list existing users.            |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 2    | Open “add user” (or equivalent); submit  | Validation messages; no duplicate row;   | [Record what you observed]               | [ ]              |
+|      | with invalid email or missing password.  | user stays on form.                      |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 3    | Create a user with valid unique data;    | Success feedback; new user visible in    | [Record what you observed]               | [ ]              |
+|      | save.                                    | list; DB row exists (spot-check).        |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 4    | Edit that user (e.g. name or email if    | List/detail shows updated values after   | [Record what you observed]               | [ ]              |
+|      | allowed); save.                          | save; no unintended password reset unless|                                          |                  |
+|      |                                          | UI explicitly does so.                   |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 5    | Delete the test user (or use app’s       | User disappears from list or marked      | [Record what you observed]               | [ ]              |
+|      | deactivate); refresh page.               | inactive; login with that account fails  |                                          |                  |
+|      |                                          | if deleted; other users unaffected.      |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+
+================================================================================
+MT_UT_003 — STATION MANAGEMENT (index, show, create, update, delete)
+================================================================================
+
+MANUAL TESTING TEST CASE: UNIT TESTING
+
+Test Case ID:              MT_UT_003
+Test Case Description:     Verify station lifecycle: listing, detail view,
+                           create/update validation, and delete or soft-delete
+                           consistent with migrations (e.g. deleted_at).
+Created By:                [Name of Creator]
+Reviewed By:               [Name of Reviewer]
+Version:                   [Version #]
+Priority:                  High
+Tester's Name:             [Name of Tester]
+Date Tested:               [MM/DD/YY]
+Test Case (Pass/Fail/Not Executed):  [ ]
+
+--- Preparation ---
+
+Prerequisites:
+  1. Authenticated user with permission to manage stations.
+  2. Migrations applied including stations table and soft deletes if used.
+  3. At least zero or one existing station (either seed or create during test).
+  4. Optional: autocomplete URL /stations/autocomplete available for dependent UI.
+  5. Note naming rules (required fields, max length) from form labels or validation.
+
+Test Data:
+  - Positive: distinct station name and any required fields (code, address, etc.).
+  - Negative: empty name; duplicate name if uniqueness enforced; overlong strings.
+  - Mixed: create minimal valid station then add items later (cross-check MT_UT_004).
+
+--- Execution ---
+
+Test Scenario:
+  Create a new station, open its show page, update its attributes, confirm
+  index and detail stay in sync, then remove the station if policy allows and
+  verify list/export behavior if applicable.
+
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| Step | Step Details                             | Expected Results                         | Actual Results                           | Pass/Fail/...    |
+| #    |                                          |                                          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 1    | Open stations index (/stations).         | List loads; pagination/search/autocomplete| [Record what you observed]               | [ ]              |
+|      |                                          | behave per design (if present).          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 2    | Attempt to create station with missing   | Validation errors; no blank row in list. | [Record what you observed]               | [ ]              |
+|      | required fields.                         |                                          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 3    | Create station with valid data.          | Redirect or success; station appears on  | [Record what you observed]               | [ ]              |
+|      |                                          | index; open show page without error.     |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 4    | From show or edit, update one or more    | Show and index reflect new values; items | [Record what you observed]               | [ ]              |
+|      | fields (name, contact, etc.).            | under station still visible if any.      |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 5    | Delete station (or soft-delete).         | Station hidden from default list or      | [Record what you observed]               | [ ]              |
+|      | Confirm behavior for linked items.       | marked deleted; linked data policy clear |                                          |                  |
+|      |                                          | (cascade, block, or warning).            |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+
+================================================================================
+MT_UT_005 — TRANSFER / MOVEMENT (between stations)
+================================================================================
+
+MANUAL TESTING TEST CASE: UNIT TESTING
+
+Test Case ID:              MT_UT_005
+Test Case Description:     Verify transferring quantity from one station to
+                           another updates stock correctly, records movement if
+                           applicable, and rejects invalid amounts.
+Created By:                [Name of Creator]
+Reviewed By:               [Name of Reviewer]
+Version:                   [Version #]
+Priority:                  High
+Tester's Name:             [Name of Tester]
+Date Tested:               [MM/DD/YY]
+Test Case (Pass/Fail/Not Executed):  [ ]
+
+--- Preparation ---
+
+Prerequisites:
+  1. Two stations A and B; user can access both.
+  2. At least one item on station A with known quantity (e.g. 10 units).
+  3. Same item may or may not exist on B beforehand — note starting state.
+  4. Optional: inspect movements table or activity log after transfers.
+  5. If notifications fire on transfer, recipient user available to verify MT_UT_008.
+
+Test Data:
+  - Positive: transfer amount 1 .. available qty; choose destination B.
+  - Negative: amount > available; zero; negative; non-numeric; same station if disallowed.
+  - Mixed: two sequential small transfers; then undo only if app supports it.
+
+--- Execution ---
+
+Test Scenario:
+  From the source station, initiate transfer to destination with valid data,
+  confirm balances, then attempt an invalid transfer to ensure validation and
+  no corrupt quantities.
+
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| Step | Step Details                             | Expected Results                         | Actual Results                           | Pass/Fail/...    |
+| #    |                                          |                                          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 1    | Open transfer UI from station A for an   | Destination stations/items load; form   | [Record what you observed]               | [ ]              |
+|      | item with known quantity.                | fields match app design.                 |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 2    | Submit transfer with quantity greater    | Error message; source quantity unchanged;| [Record what you observed]               | [ ]              |
+|      | than on-hand stock.                      | destination unchanged.                   |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 3    | Submit valid partial transfer (e.g. 3    | Success message; source qty reduced by 3;| [Record what you observed]               | [ ]              |
+|      | of 10) to station B.                     | destination gains 3 (new row or merged). |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 4    | Refresh both station views and optional  | Figures match DB; movement/audit entry   | [Record what you observed]               | [ ]              |
+|      | movements/history screen.                | exists if feature is implemented.        |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 5    | Repeat with edge case: minimum valid     | Still consistent; no negative stock;     | [Record what you observed]               | [ ]              |
+|      | amount (e.g. 1) or second transfer.      | totals additive as expected.             |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+
+================================================================================
+MT_UT_006 — DASHBOARD (authenticated landing, metrics)
+================================================================================
+
+MANUAL TESTING TEST CASE: UNIT TESTING
+
+Test Case ID:              MT_UT_006
+Test Case Description:     Verify dashboard renders for signed-in users,
+                           displays summary widgets without errors, and blocks
+                           guests; spot-check at least one figure vs data.
+Created By:                [Name of Creator]
+Reviewed By:               [Name of Reviewer]
+Version:                   [Version #]
+Priority:                  Medium
+Tester's Name:             [Name of Tester]
+Date Tested:               [MM/DD/YY]
+Test Case (Pass/Fail/Not Executed):  [ ]
+
+--- Preparation ---
+
+Prerequisites:
+  1. Known dataset: e.g. N stations, M items, or seed from DatabaseSeeder.
+  2. Ability to log in as user who should see dashboard aggregates.
+  3. Optional: tinker or DB query to count rows for comparison.
+  4. Browser without extensions blocking charts if dashboard uses JS charts.
+  5. Clear cache if dashboard is cached (config/cache) — only if you suspect stale data.
+
+Test Data:
+  - Positive: user with rich data (multiple stations/items).
+  - Negative / edge: new user with zero stations (widgets show 0 or empty state).
+  - Mixed: after creating one station/item, reload dashboard and expect change.
+
+--- Execution ---
+
+Test Scenario:
+  Validate dashboard as the post-login hub: guest denied, authenticated user
+  sees layout, numbers update after data changes, and no PHP/JS console errors
+  in normal use.
+
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| Step | Step Details                             | Expected Results                         | Actual Results                           | Pass/Fail/...    |
+| #    |                                          |                                          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 1    | As guest, request /dashboard directly.   | Redirect to login; no partial dashboard  | [Record what you observed]               | [ ]              |
+|      |                                          | HTML leaked.                             |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 2    | Log in; open /dashboard.                 | HTTP 200; layout, nav, and widgets load | [Record what you observed]               | [ ]              |
+|      |                                          | without fatal errors.                    |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 3    | Pick one displayed statistic (e.g. total | Manual count matches dashboard within    | [Record what you observed]               | [ ]              |
+|      | items or stations). Verify vs DB or UI.  | expected rules (filters, soft deletes).  |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 4    | In another tab, add a station or item;   | After refresh, dashboard reflects new    | [Record what you observed]               | [ ]              |
+|      | return and refresh dashboard.            | totals if included in aggregates.        |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 5    | Check browser console for errors on load. | No uncaught errors blocking widgets      | [Record what you observed]               | [ ]              |
+|      |                                          | (warnings only are noted in Actual).     |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+
+================================================================================
+MT_UT_007 — REPORTS (filters, accuracy, optional export)
+================================================================================
+
+MANUAL TESTING TEST CASE: UNIT TESTING
+
+Test Case ID:              MT_UT_007
+Test Case Description:     Verify reports page loads for authorized users,
+                           filters narrow results correctly, and totals or rows
+                           align with known movements/items for the period.
+Created By:                [Name of Creator]
+Reviewed By:               [Name of Reviewer]
+Version:                   [Version #]
+Priority:                  Medium
+Tester's Name:             [Name of Tester]
+Date Tested:               [MM/DD/YY]
+Test Case (Pass/Fail/Not Executed):  [ ]
+
+--- Preparation ---
+
+Prerequisites:
+  1. Historical data: items/transfers across at least two dates or stations.
+  2. Logged-in user with access to /reports.
+  3. Note report type(s) the app exposes (inventory snapshot, movements, etc.).
+  4. Optional: spreadsheet to compare exported CSV columns to DB.
+  5. Correct server timezone or note date-boundary behavior if filters use dates.
+
+Test Data:
+  - Positive: date range that includes known transfers; single station filter.
+  - Negative: end date before start date; empty range; future-only range.
+  - Mixed: change one filter at a time to see isolated effect on row set.
+
+--- Execution ---
+
+Test Scenario:
+  Open reports, apply filters that should include and exclude known records,
+  verify row counts and key columns, then run export if the feature exists.
+
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| Step | Step Details                             | Expected Results                         | Actual Results                           | Pass/Fail/...    |
+| #    |                                          |                                          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 1    | Navigate to /reports while logged in.    | Page renders; no 500 error; filter UI    | [Record what you observed]               | [ ]              |
+|      |                                          | visible if designed.                     |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 2    | Run default or “all” view (no tight       | Baseline row set; note count and sample  | [Record what you observed]               | [ ]              |
+|      | filters).                                | rows for next steps.                     |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 3    | Apply date and/or station filter known   | Rows exclude out-of-range or wrong       | [Record what you observed]               | [ ]              |
+|      | to exclude at least one record.          | station; included rows still correct.    |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 4    | Apply invalid or empty filter combo      | Validation message or sensible empty     | [Record what you observed]               | [ ]              |
+|      | per app rules.                           | state; no server crash.                  |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 5    | If export exists: export current view;    | File downloads; delimiter/headers OK;    | [Record what you observed]               | [ ]              |
+|      | open and spot-check two lines vs screen. | counts match on-screen summary.          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+
+================================================================================
+MT_UT_008 — NOTIFICATIONS, ACTIVITY LOG, STATION EXPORT
+================================================================================
+
+MANUAL TESTING TEST CASE: UNIT TESTING
+
+Test Case ID:              MT_UT_008
+Test Case Description:     Verify notification generation (e.g. after transfer),
+                           mark-read and clear flows, activity log entries if
+                           exposed, and station inventory export download.
+Created By:                [Name of Creator]
+Reviewed By:               [Name of Reviewer]
+Version:                   [Version #]
+Priority:                  Medium
+Tester's Name:             [Name of Tester]
+Date Tested:               [MM/DD/YY]
+Test Case (Pass/Fail/Not Executed):  [ ]
+
+--- Preparation ---
+
+Prerequisites:
+  1. Two users or roles if notifications target specific recipients; else one user.
+  2. Ability to perform an action that triggers notification (e.g. transfer per MT_UT_005).
+  3. Station with items for export; know URL pattern /stations/{id}/export.
+  4. Optional: inspect notifications / notification_reads / activity_logs tables.
+  5. Download folder writable for export file test.
+
+Test Data:
+  - Positive: one transfer between stations; mark one notification read; export CSV/PDF.
+  - Negative: mark read with invalid id (if tampering URL); clear when none exist.
+  - Mixed: multiple notifications; clear all then confirm empty state.
+
+--- Execution ---
+
+Test Scenario:
+  Trigger a business event, confirm notification appears and state changes on
+  read/clear, spot-check activity logging if visible in UI, and validate export
+  content for a station.
+
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| Step | Step Details                             | Expected Results                         | Actual Results                           | Pass/Fail/...    |
+| #    |                                          |                                          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 1    | Perform action that should notify        | Notification appears in UI (bell/list) | [Record what you observed]               | [ ]              |
+|      | (e.g. complete transfer).              | for intended user; no duplicate spam on  |                                          |                  |
+|      |                                          | single action.                           |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 2    | Open notification detail or use “mark    | Item shows read state; persists after    | [Record what you observed]               | [ ]              |
+|      | read” endpoint if UI provides it.        | page refresh.                            |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 3    | Use clear-all or equivalent for station  | List empty or count zero; refresh        | [Record what you observed]               | [ ]              |
+|      | notifications.                           | confirms; DB read flags consistent.      |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 4    | If activity log is visible: open log or  | Recent transfer (or test action) appears | [Record what you observed]               | [ ]              |
+|      | admin audit view.                        | with sensible message/metadata.          |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+| 5    | Request station export for a station     | File downloads; opens in Excel/sheet;    | [Record what you observed]               | [ ]              |
+|      | with known items.                        | item names/qty match station show page.  |                                          |                  |
++------+------------------------------------------+------------------------------------------+------------------------------------------+------------------+
+
+================================================================================
+NOTES FOR YOUR SUBMISSION
+================================================================================
+• “Unit” in manual test documents often means one **cohesive module** (auth,
+  users, items, …). Automated PHPUnit **Unit** tests would target classes
+  (models, actions) in isolation; this file is structured for **manual** steps.
+• Replace bracketed placeholders ([Name of Creator], [MM/DD/YY], Actual Results)
+  when you run tests.
+• If your instructor requires **one Word/Excel row per test case**, use the
+  summary table for the cover sheet and attach one scenario table per MT_UT_*.
+
+End of ActTestCase.txt
