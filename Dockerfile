@@ -21,6 +21,7 @@ RUN composer dump-autoload --optimize --no-dev --no-interaction \
 
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
+    && rm -f public/hot \
     && npm ci \
     && npm run build \
     && rm -rf node_modules \
