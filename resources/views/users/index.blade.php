@@ -42,17 +42,6 @@
         @endif
     </div>
 
-    @if(session('success'))
-        <div id="successMessage" class="bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 p-4 mb-6 shadow-md rounded-r flex items-center justify-between">
-            <p class="font-bold">{{ session('success') }}</p>
-        </div>
-    @endif
-    @if(session('error'))
-        <div id="errorMessage" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 shadow-md rounded-r flex items-center justify-between">
-            <p class="font-bold">{{ session('error') }}</p>
-        </div>
-    @endif
-
     <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
         <table class="min-w-full leading-normal">
             <thead>
@@ -322,11 +311,6 @@
         }
         
         document.addEventListener('DOMContentLoaded', function() {
-            const msg = document.getElementById('successMessage');
-            if (msg) setTimeout(() => { msg.classList.add('opacity-0'); setTimeout(() => msg.remove(), 1000); }, 3000);
-            const err = document.getElementById('errorMessage');
-            if (err) setTimeout(() => { err.classList.add('opacity-0'); setTimeout(() => err.remove(), 1000); }, 4000);
-
             // 1. GENERIC INPUTS
             const genericInputs = document.querySelectorAll('#editUserForm input:not([readonly]):not([type="password"])');
             genericInputs.forEach(input => {

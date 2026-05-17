@@ -139,7 +139,7 @@
 
     </div>
 
-    {{-- REMOVED: Dark Theme Script was here --}}
+    @include('partials.flash-modal')
 
 </body>
 </html>

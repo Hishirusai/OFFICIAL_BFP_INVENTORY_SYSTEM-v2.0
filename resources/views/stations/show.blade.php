@@ -939,14 +939,6 @@
             openModal('addItemModal');
         @endif
 
-        // 3. AUTO-HIDE SUCCESS MESSAGE
-        const successMessage = document.getElementById('successMessage');
-        if (successMessage) {
-            setTimeout(function() {
-                successMessage.classList.add('opacity-0');
-                setTimeout(function() { successMessage.remove(); }, 1000);
-            }, 3000);
-        }
     });
 
         // --- NEW: FETCH RESULTS FUNCTION ---

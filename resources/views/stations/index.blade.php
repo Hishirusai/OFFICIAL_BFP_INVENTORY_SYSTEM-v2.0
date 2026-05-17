@@ -93,13 +93,6 @@
             </div>
         </div>
 
-    @if(session('success'))
-        <div id="successMessage" class="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 p-4 mb-8 shadow-sm rounded-r flex items-center justify-between transition-opacity duration-1000 ease-out">
-            <div><p class="font-bold text-lg">Success</p><p>{{ session('success') }}</p></div>
-            <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-        </div>
-    @endif
-
     <div id="stationsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($stations as $station)
             @php
@@ -280,10 +273,6 @@
             input.focus(); // Keep focus
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
-            let msg = document.getElementById('successMessage');
-            if(msg) setTimeout(() => msg.remove(), 4000);
-        });
     </script>
     @if($errors->any()) <script> openModal('addStationModal'); </script> @endif
 @endsection
